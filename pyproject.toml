@@ -1,0 +1,9 @@
+[project]
+name = "leonardo-visual-demos"
+version = "0.1.0"
+description = "Portable visual HPC demonstrations for desktop and Leonardo"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "Pillow>=10", "fastapi>=0.110", "uvicorn[standard]>=0.27", "pydantic>=2.5"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,266 @@
+{
+  "black_hole": {
+    "name": "Black-hole lensing",
+    "tagline": "Trace the light, then reveal the scale.",
+    "params": {
+      "mass": {
+        "min": 0.5,
+        "max": 3.0,
+        "step": 0.05,
+        "value": 1.35
+      },
+      "spin": {
+        "min": -0.95,
+        "max": 0.95,
+        "step": 0.05,
+        "value": 0.55
+      },
+      "disk": {
+        "min": 0,
+        "max": 1,
+        "step": 1,
+        "value": 1
+      }
+    }
+  },
+  "pbh": {
+    "name": "Primordial black-hole threshold",
+    "tagline": "A tiny change decides collapse or dispersion.",
+    "params": {
+      "delta": {
+        "min": 0.46,
+        "max": 0.54,
+        "step": 0.001,
+        "value": 0.505
+      },
+      "width": {
+        "min": 0.6,
+        "max": 1.6,
+        "step": 0.05,
+        "value": 1.0
+      }
+    }
+  },
+  "fluid": {
+    "name": "Virtual wind tunnel",
+    "tagline": "Turn smooth flow into turbulent structure.",
+    "params": {
+      "speed": {
+        "min": 0.025,
+        "max": 0.1,
+        "step": 0.0025,
+        "value": 0.06
+      },
+      "obstacle": {
+        "min": 0,
+        "max": 2,
+        "step": 1,
+        "value": 0
+      }
+    }
+  },
+  "cosmic_web": {
+    "name": "Cosmic-web formation",
+    "tagline": "Gravity plus gas composition: hydrogen (A=1) to helium (A=4).",
+    "params": {
+      "seed": {
+        "min": 1,
+        "max": 999,
+        "step": 1,
+        "value": 42
+      },
+      "gravity": {
+        "min": 0.2,
+        "max": 2.0,
+        "step": 0.05,
+        "value": 0.8
+      },
+      "helium": {
+        "min": 0,
+        "max": 1,
+        "step": 0.02,
+        "value": 0.24
+      }
+    }
+  },
+  "galaxy_collision": {
+    "name": "Galaxy collision",
+    "tagline": "Our actual future: the Milky Way meets Andromeda.",
+    "params": {
+      "preset": {
+        "min": 0,
+        "max": 1,
+        "step": 1,
+        "value": 1
+      },
+      "impact": {
+        "min": 0,
+        "max": 1,
+        "step": 0.05,
+        "value": 0.55
+      },
+      "speed": {
+        "min": 0.2,
+        "max": 1.8,
+        "step": 0.05,
+        "value": 0.75
+      },
+      "tilt": {
+        "min": 0,
+        "max": 80,
+        "step": 1,
+        "value": 18
+      }
+    }
+  },
+  "reaction_diffusion": {
+    "name": "Living mathematics",
+    "tagline": "Draw, evolve, then reveal a whole parameter space.",
+    "params": {
+      "feed": {
+        "min": 0.015,
+        "max": 0.07,
+        "step": 0.001,
+        "value": 0.0367
+      },
+      "kill": {
+        "min": 0.04,
+        "max": 0.075,
+        "step": 0.001,
+        "value": 0.0649
+      }
+    }
+  },
+  "crystal": {
+    "name": "Crystal growth",
+    "tagline": "Six-fold snowflake, fern, seaweed, star, coral or plate \u2014 then zoom in.",
+    "params": {
+      "undercooling": {
+        "min": 0.3,
+        "max": 1.4,
+        "step": 0.05,
+        "value": 0.75
+      },
+      "anisotropy": {
+        "min": 0.01,
+        "max": 0.12,
+        "step": 0.005,
+        "value": 0.055
+      },
+      "symmetry": {
+        "min": 3,
+        "max": 12,
+        "step": 1,
+        "value": 6
+      },
+      "mode": {
+        "min": 0,
+        "max": 5,
+        "step": 1,
+        "value": 0
+      },
+      "seed": {
+        "min": 1,
+        "max": 999,
+        "step": 1,
+        "value": 3
+      }
+    }
+  },
+  "neural_wall": {
+    "name": "Neural-network wall",
+    "tagline": "You thought it was one network.",
+    "params": {
+      "target": {
+        "min": 0,
+        "max": 3,
+        "step": 1,
+        "value": 0
+      },
+      "difficulty": {
+        "min": 0.5,
+        "max": 2.0,
+        "step": 0.1,
+        "value": 1.0
+      }
+    }
+  },
+  "fusion_plasma": {
+    "name": "Star in a Bottle",
+    "tagline": "Confine a turbulent plasma, then reveal the reactor operating map.",
+    "params": {
+      "magnetic_field": {
+        "min": 2.0,
+        "max": 8.0,
+        "step": 0.1,
+        "value": 5.0
+      },
+      "heating": {
+        "min": 5,
+        "max": 50,
+        "step": 1,
+        "value": 25
+      },
+      "density": {
+        "min": 0.5,
+        "max": 1.5,
+        "step": 0.05,
+        "value": 1.0
+      }
+    }
+  },
+  "weather_ensemble": {
+    "name": "Storm Factory",
+    "tagline": "Race the weather with a globe of possible forecasts.",
+    "params": {
+      "warming": {
+        "min": 0,
+        "max": 4,
+        "step": 0.1,
+        "value": 1.5
+      },
+      "jet_stream": {
+        "min": 0.5,
+        "max": 1.5,
+        "step": 0.05,
+        "value": 1.0
+      },
+      "uncertainty": {
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "value": 25
+      }
+    }
+  },
+  "molecular_dynamics": {
+    "name": "Molecular Machine",
+    "tagline": "Watch one molecule fold, then reveal the virtual laboratory.",
+    "params": {
+      "temperature": {
+        "min": 250,
+        "max": 500,
+        "step": 5,
+        "value": 310
+      },
+      "attraction": {
+        "min": 0.4,
+        "max": 2.0,
+        "step": 0.05,
+        "value": 1.0
+      },
+      "solvent": {
+        "min": 0,
+        "max": 1,
+        "step": 0.05,
+        "value": 0.65
+      },
+      "sequence": {
+        "min": 0,
+        "max": 3,
+        "step": 1,
+        "value": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,189 @@
+# Scientific notes and limitations
+
+The demos aim to make legitimate computational ideas visible, but they intentionally trade production-level physical detail for fast iteration and a coherent exhibition experience.
+
+## Black-hole lensing
+
+The included solver is an **exhibition-grade image-space gravitational lens mapping**, not a full Kerr null-geodesic integrator and not GRMHD. It demonstrates the embarrassingly parallel structure of per-pixel ray calculations and produces lens-like warping plus a stylised emission ring. The opening exploded-layer scene is an explanatory visualisation of source plane, foreground dust, lens and observer image plane; its animated curved paths are illustrative and are not individual numerical geodesics. The subsequent 2-D frame is the output of `BlackHoleDemo.lens()`. For a research-accurate flagship, replace that function with a validated Schwarzschild/Kerr geodesic integrator while keeping the same frame/output interface.
+
+## PBH
+
+The supplied capstone describes a Misner-Sharp / Chebyshev pseudo-spectral / RK4 solver and a critical threshold near `δc ≈ 0.49774` for its chosen setup. The repository does **not** silently claim to reproduce that full numerical-relativity solver. `PBHDemo` is a reduced qualitative exhibition model whose only purpose is to make the collapse-versus-dispersion narrative and parameter sweep testable.
+
+Use `tools/render_pbh_research.py` to convert output from the validated research code into the exhibition frame format. This is the recommended route for the final EuroHPC display.
+
+## Fluid
+
+The fluid module is a real D2Q9 lattice-Boltzmann solver in two dimensions. It
+is suitable for qualitative wakes and vortex shedding, not quantitative
+aerodynamics around a real aircraft or car. The circular obstacle is
+intentionally simple.
+
+The displayed background is flow **speed**, with vorticity as a secondary tint;
+an earlier version showed |vorticity| on a fire palette, which read as a heat
+map rather than as moving air. Overlaid streaklines are passive tracers
+advected by the same velocity field, drawn with a short position history so a
+still frame carries flow direction. Their time step is amplified for legibility
+— they are a visualisation of the velocity field, not a second physical
+integration. Reported pressure is p = (rho - 1)/3 from the lattice density.
+
+## Cosmic web
+
+The cosmic-web code is a real 2-D particle-mesh gravitational model: Zel'dovich
+initial conditions drawn from a power-law power spectrum, an FFT Poisson solve
+on the density contrast, nearest-grid-point deposition/sampling, and comoving
+integration on a matter-dominated expanding background.
+
+It is still **not a cosmological precision code**: two dimensions only, a
+power-law P(k) rather than a real transfer function, no cosmological parameter
+integration, nearest-grid-point rather than CIC assignment, and no force
+resolution study.
+
+### Gas composition
+
+The `helium` parameter is the helium mass fraction. Masses are the physical
+ones: hydrogen A = 1.008, helium-4 A = 4.003. Note that helium's atomic
+*number* is 2 but its *mass* number is 4, and it is the mass that sets the gas
+dynamics. The mean molecular weight of a neutral H/He mix is
+
+    mu = 1 / (X/1.008 + Y/4.003),   X + Y = 1
+
+giving mu = 1.008 for pure hydrogen, 1.229 for the primordial mix (Y = 0.24)
+and 4.003 for pure helium. Since the sound speed goes as sqrt(T/mu), a heavier
+mean molecular weight means a shorter Jeans length and therefore finer
+structure. This is applied as a Jeans-scale smoothing of the potential. It is a
+legitimate scaling, not a full two-fluid treatment: there is no thermal
+evolution, no cooling, and no ionisation history.
+
+## Galaxy collision
+
+This is a restricted N-body encounter: tracer stars feel two softened (Plummer)
+galaxy potentials while the galaxy centres mutually accelerate. Tracers do not
+contribute self-gravity, and there is no dynamical friction, so the orbit does
+not decay the way a real merger's does.
+
+The default preset uses published Local Group values: M_MW and M_M31 of about
+1.5x10^12 solar masses each, a separation of 770 kpc, a radial approach
+velocity of -109 km/s and a transverse velocity of about 17 km/s (van der Marel
+et al. 2012, ApJ 753, 8; refined by Gaia astrometry). Working units are kpc,
+km/s and solar masses, so the on-screen clock in Gyr is meaningful.
+
+Treat the outcome as *a* plausible encounter, not a prediction. The masses are
+virial estimates with large error bars and the transverse velocity in
+particular is uncertain at the tens-of-km/s level — which is exactly what the
+reveal sweep illustrates. Without dynamical friction this model shows the first
+passage and tidal bridge faithfully but will not settle into a merger remnant.
+
+The opening discs use observationally motivated morphology (a four-arm Milky
+Way disc; a two-arm, ringed M31 disc), and the renderer accumulates each
+tracer's represented mass into pixels before assigning brightness and colour.
+This makes overlap visibly brighter, but the particle positions are still
+generated tracers, **not** an imported Gaia/PHAT star catalogue. The PHAT/PHAST
+catalogues resolve tens of millions of M31 stars and are too large to download
+inside an exhibition run. The optional `data/m31_catalog_reduced.npz` asset is
+the defined catalogue-driven route: `tools/reduce_star_catalog.py` combines a
+curator-supplied, deprojected CSV into spatial cells, storing each cell's
+weighted centre of mass and total flux/mass. If that asset is present, M31
+positions are weighted resamples of it; otherwise the morphology model is
+used. This changes the initial tracer distribution, not the restricted-N-body
+physics or its limitations.
+
+## Reaction diffusion
+
+This is a genuine Gray-Scott reaction-diffusion finite-difference simulation
+with periodic boundaries, integrated on a 16:9 domain so the displayed spots
+are not stretched. The step budget is set per profile rather than derived from
+the frame count: the pattern needs O(10^4) steps to fill the domain, and a
+frame-derived budget stopped near 10^3, leaving the screen almost empty.
+
+## Crystal growth
+
+The crystal module is **not** a phase-field PDE solver. It is a recursive
+geometric growth model: a set of line segments generated by applying the same
+branching rule at successively smaller scales, with six named habits (classic,
+fern, seaweed, star, coral, plate) and a selectable symmetry.
+
+This is an honest description of what it does — it is procedural geometry that
+imitates dendritic morphology, not a solved free-boundary problem. Real habit
+selection depends on temperature and supersaturation (the Nakaya diagram); here
+the habit is simply chosen. Do not present it as a calibrated ice-growth
+calculation.
+
+The advantage of the geometric form is that it is resolution independent. The
+viewer regenerates the geometry for whatever window is on screen, so magnifying
+reveals genuinely finer branch generations rather than enlarged pixels, without
+a fixed depth limit.
+
+Be clear about what that means physically: the branching rule is applied at
+every scale because it is *defined* at every scale, not because a real crystal
+is self-similar without end. Real dendrites stop at the scale set by molecular
+attachment kinetics and the diffusion field. The unbounded zoom is a property
+of the model, not a claim about ice.
+
+## Neural-network wall
+
+Each model is a small coordinate MLP: it is given a pixel coordinate `(x,y)`
+and learns to output three values `(R,G,B)`. That is why it can recreate a
+drawn, uploaded or visitor-captured image without recognising what the image
+contains. It is fitting a coloured function over a small canvas, not classifying
+a face or a digit. Camera consent and capture occur in the browser; only the
+captured 128-pixel RGB target is included in the run request.
+
+When PyTorch is installed the module performs genuine training of many small
+coordinate MLPs. The networks are held as stacked (N, in, out) weight tensors
+and advanced with one batched forward/backward and a hand-written Adam step
+carrying a per-network learning rate, so the whole ensemble is a single set of
+matmuls — the structure that actually maps onto a GPU. Hidden width is varied
+by masking unused units. Networks are laid out as a 2-D hyperparameter grid:
+learning rate along a row, width down a column.
+
+Without PyTorch it falls back to a deterministic Fourier reconstruction
+surrogate. The surrogate is **not training**: the frame headline, subtitle and
+badge all say so explicitly, and the metadata reports `numpy-surrogate`. Do not
+call the fallback "neural-network training" during a public presentation.
+
+## Star in a Bottle / fusion plasma
+
+This demo integrates the complex Ginzburg--Landau amplitude equation on a
+periodic 2-D lattice and maps that field onto a torus. The equation is a real
+nonlinear wave model that produces coherent waves, defects and spatiotemporal
+turbulence; it is useful for exposing the compute pattern of a plasma field
+solver. Magnetic field, heating and density alter its dimensionless drive,
+dispersion and damping coefficients.
+
+It is **not** a predictive tokamak code, gyrokinetic simulation, MHD equilibrium
+solver or model of any particular reactor. The displayed tesla and megawatt
+controls provide an intuitive operating-space narrative, but the coefficient
+mapping is illustrative and must not be used to infer fusion performance. The
+reveal is nevertheless genuine computation: every tile integrates a separate
+field with different control values.
+
+## Storm Factory / weather ensemble
+
+The atmosphere is a reduced barotropic-vorticity model coupled to an advected
+moisture scalar on a latitude/longitude grid. A spectral Poisson inversion
+recovers a streamfunction from vorticity; finite differences then advect
+potential vorticity and moisture. This is a legitimate reduced geophysical
+fluid model and the reveal members really do start from different smoothed
+initial perturbations.
+
+It is not an operational weather forecast. It has one vertical layer, stylised
+forcing and damping, no assimilated observations, no topography and no full
+thermodynamics. The continents are deliberately low-resolution procedural
+geography used only for orientation. Forecast hours and warming controls are
+part of the exhibition story, not calibrated predictions of a named storm.
+
+## Molecular Machine / molecular dynamics
+
+This is coarse-grained 3-D molecular dynamics. Consecutive particles have
+harmonic bonds; non-neighbours interact through a softened, type-dependent
+Lennard-Jones force; a deterministic thermostat controls kinetic temperature.
+All non-bonded pairs are evaluated, so the displayed pair-evaluation count and
+the quadratic scaling story are real. Every reveal tile is an independently
+integrated trajectory with its own initial velocities and sequence pattern.
+
+The particles are beads, not individual atoms. There is no explicit water,
+electrostatics, chemical bonding, force-field parameterisation or physical
+time calibration, and the model must not be presented as a drug-binding or
+protein-structure prediction. Its role is to visualise molecular ensembles and
+the computational structure of pair forces.

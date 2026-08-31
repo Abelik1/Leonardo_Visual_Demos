@@ -1,0 +1,221 @@
+{
+  "local": {
+    "black_hole": {
+      "width": 640,
+      "height": 360,
+      "ensemble": 16
+    },
+    "pbh": {
+      "radial_points": 180,
+      "ensemble": 64
+    },
+    "fluid": {
+      "nx": 256,
+      "ny": 144,
+      "steps_per_frame": 6,
+      "tracers": 900,
+      "trail": 12,
+      "tracer_boost": 9.0,
+      "total_steps": 4500
+    },
+    "cosmic_web": {
+      "grid": 160,
+      "particles": 60000,
+      "total_steps": 1400,
+      "sweep_steps": 1100,
+      "jeans_ref": 2.4,
+      "ic_amplitude": 0.9,
+      "ic_velocity": 0.55
+    },
+    "galaxy_collision": {
+      "particles": 14000,
+      "substeps": 6,
+      "span_gyr": 7.5
+    },
+    "reaction_diffusion": {
+      "n": 192,
+      "total_steps": 12000,
+      "sweep_steps": 3000,
+      "ensemble": 25
+    },
+    "crystal": {
+      "depth": 5,
+      "ensemble": 25,
+      "zoom_levels": 3,
+      "zoom_depth": 7,
+      "zoom_tile": 256
+    },
+    "neural_wall": {
+      "networks": 36,
+      "tile": 40,
+      "total_steps": 1800
+    },
+    "fusion_plasma": {
+      "n": 88,
+      "total_steps": 700,
+      "ensemble": 16,
+      "sweep_n": 44,
+      "sweep_steps": 220
+    },
+    "weather_ensemble": {
+      "n": 64,
+      "total_steps": 650,
+      "ensemble": 16,
+      "sweep_n": 36,
+      "sweep_steps": 260
+    },
+    "molecular_dynamics": {
+      "particles": 72,
+      "total_steps": 800,
+      "ensemble": 16,
+      "sweep_particles": 32,
+      "sweep_steps": 280
+    }
+  },
+  "desktop": {
+    "black_hole": {
+      "width": 1280,
+      "height": 720,
+      "ensemble": 36
+    },
+    "pbh": {
+      "radial_points": 400,
+      "ensemble": 256
+    },
+    "fluid": {
+      "nx": 480,
+      "ny": 270,
+      "steps_per_frame": 10,
+      "tracers": 1500,
+      "trail": 14,
+      "tracer_boost": 9.0,
+      "total_steps": 9000
+    },
+    "cosmic_web": {
+      "grid": 256,
+      "particles": 160000,
+      "total_steps": 1800,
+      "sweep_steps": 1300,
+      "jeans_ref": 2.4,
+      "ic_amplitude": 0.9,
+      "ic_velocity": 0.55
+    },
+    "galaxy_collision": {
+      "particles": 60000,
+      "substeps": 8,
+      "span_gyr": 7.5
+    },
+    "reaction_diffusion": {
+      "n": 320,
+      "total_steps": 16000,
+      "sweep_steps": 4000,
+      "ensemble": 64
+    },
+    "crystal": {
+      "depth": 6,
+      "ensemble": 36,
+      "zoom_levels": 4,
+      "zoom_depth": 8,
+      "zoom_tile": 256
+    },
+    "neural_wall": {
+      "networks": 128,
+      "tile": 56,
+      "total_steps": 2600
+    },
+    "fusion_plasma": {
+      "n": 176,
+      "total_steps": 1500,
+      "ensemble": 25,
+      "sweep_n": 72,
+      "sweep_steps": 480
+    },
+    "weather_ensemble": {
+      "n": 144,
+      "total_steps": 1400,
+      "ensemble": 25,
+      "sweep_n": 64,
+      "sweep_steps": 600
+    },
+    "molecular_dynamics": {
+      "particles": 220,
+      "total_steps": 1600,
+      "ensemble": 25,
+      "sweep_particles": 72,
+      "sweep_steps": 650
+    }
+  },
+  "leonardo": {
+    "black_hole": {
+      "width": 2560,
+      "height": 1440,
+      "ensemble": 64
+    },
+    "pbh": {
+      "radial_points": 800,
+      "ensemble": 1024
+    },
+    "fluid": {
+      "nx": 960,
+      "ny": 540,
+      "steps_per_frame": 16,
+      "tracers": 2600,
+      "trail": 16,
+      "tracer_boost": 9.0,
+      "total_steps": 18000
+    },
+    "cosmic_web": {
+      "grid": 512,
+      "particles": 600000,
+      "total_steps": 2400,
+      "sweep_steps": 1600,
+      "jeans_ref": 2.4,
+      "ic_amplitude": 0.9,
+      "ic_velocity": 0.55
+    },
+    "galaxy_collision": {
+      "particles": 250000,
+      "substeps": 10,
+      "span_gyr": 7.5
+    },
+    "reaction_diffusion": {
+      "n": 512,
+      "total_steps": 24000,
+      "sweep_steps": 6000,
+      "ensemble": 256
+    },
+    "crystal": {
+      "depth": 6,
+      "ensemble": 64,
+      "zoom_levels": 5,
+      "zoom_depth": 9,
+      "zoom_tile": 256
+    },
+    "neural_wall": {
+      "networks": 512,
+      "tile": 80,
+      "total_steps": 4000
+    },
+    "fusion_plasma": {
+      "n": 384,
+      "total_steps": 3000,
+      "ensemble": 64,
+      "sweep_n": 128,
+      "sweep_steps": 1000
+    },
+    "weather_ensemble": {
+      "n": 288,
+      "total_steps": 2800,
+      "ensemble": 64,
+      "sweep_n": 112,
+      "sweep_steps": 1200
+    },
+    "molecular_dynamics": {
+      "particles": 640,
+      "total_steps": 3200,
+      "ensemble": 64,
+      "sweep_particles": 160,
+      "sweep_steps": 1400
+    }
+  }
+}

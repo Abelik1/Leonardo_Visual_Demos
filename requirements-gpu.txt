@@ -1,0 +1,8 @@
+-r requirements.txt
+# Verified on this Windows project environment with an RTX 3060 Ti and CUDA
+# 13.3 driver. CuPy uses CUDA 13; PyTorch's CUDA 13 wheel enables real neural
+# wall training. The NVIDIA driver is sufficient — no system-wide toolkit is
+# required for this setup.
+--extra-index-url https://download.pytorch.org/whl/cu130
+cupy-cuda13x==14.2.0
+torch==2.13.0+cu130

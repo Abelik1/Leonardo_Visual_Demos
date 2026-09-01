@@ -10,6 +10,10 @@ The project deliberately separates **scientific computation** from **presentatio
 
 ## The thirteen demos
 
+Per-demo architecture, scientific limits, extension points, and maintenance
+guidance are indexed in [`docs/demos/`](docs/demos/README.md). Shared source
+rules live in [`leonardo_demos/demos/AGENTS.md`](leonardo_demos/demos/AGENTS.md).
+
 | ID | Demo | Core computation | Exhibition reveal |
 |---|---|---|---|
 | `black_hole` | Black-hole lensing | 2-D image-space lens mapping + numerically integrated 3-D photon-path view | Switch between the observer image and the spatial ray-tracing model |
@@ -17,7 +21,7 @@ The project deliberately separates **scientific computation** from **presentatio
 | `fluid` | Virtual wind tunnel | D2Q9 lattice-Boltzmann with advected streaklines | Smooth flow pulls back into millions of updated cells / GPU domains |
 | `cosmic_web` | Cosmic-web formation | Particle-mesh gravity, Zel'dovich ICs, H/He gas composition | One universe pulls back into a hydrogen-to-helium composition sweep |
 | `galaxy_collision` | Galaxy collision | Restricted N-body, real Milky Way / Andromeda parameters | One future pulls back into the measurement uncertainty that decides it |
-| `galaxy_collision_3d` | Galaxy collision — full 3D gravity | Softened direct O(N²) gravity over massive disc, bulge, and halo super-particles | Rotate Gaia/PHAT-informed galaxies freely in space |
+| `galaxy_collision_3d` | Galaxy collision - full 3D gravity | Softened direct O(N²) gravity over massive disc, bulge, and halo super-particles | Rotate Gaia/PHAT-informed galaxies freely in space |
 | `reaction_diffusion` | Living mathematics | Gray-Scott reaction-diffusion PDE | One pattern pulls back into a parameter-space wall |
 | `crystal` | Crystal / snowflake growth | Recursive geometric growth, six habits, deep-zoom tile pyramid | One crystal pulls back into many habits — then zoom into its own branches |
 | `neural_wall` | Neural-network wall | Real batched coordinate-network training (PyTorch if available) | "One network" pulls back into many networks trained in parallel |

@@ -216,7 +216,7 @@
     }
   },
   "galaxy_collision_3d": {
-    "name": "Galaxy collision — full 3D gravity",
+    "name": "Galaxy collision - full 3D gravity",
     "tagline": "Every massive particle pulls every other particle; rotate the encounter in space.",
     "params": {
       "impact": {

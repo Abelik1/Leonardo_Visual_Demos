@@ -1,36 +1,19 @@
-/* Tiled deep-zoom viewer.
+/* Responsive coherent deep zoom.
 
-   Magnification is quantised onto a log2 ladder: level L means the model is
-   rendered at 2**L tiles across, and the viewer always draws the level whose
-   tiles land nearest 1:1 on screen. Tiles are fetched on demand, rendered
-   server-side at that level's native resolution and cached, so the picture is
-   never scaled by more than about 2x and never dissolves into a blur however
-   far in you go.
-
-   The earlier version asked for one image of the exact current window. Between
-   a render completing and the next arriving the browser was stretching a stale
-   bitmap, which past a few hundred times magnification looked exactly like
-   zooming into a photograph.
-
-   Coarser levels are painted first as a progressive backdrop, so there is
-   always something sharp-ish on screen while finer tiles load.
-
-   Panning is strictly drag-to-pan: it starts on a primary-button press and
-   ends on pointerup/cancel/leave/blur, including at window level, so the view
-   can never be left following the cursor with no button held. */
+   A finite recursive growth budget means independent image tiles can choose
+   different branch frontiers at their borders. This viewer uses one cached
+   source image per quantised viewport instead. Every wheel/pan event projects
+   the last good source immediately; one background request then refines it. */
 class DeepZoom {
   constructor(canvas) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.cache = new Map();
-    this.inflight = 0;
-    this.manifest = null;
-    this.tileUrl = null;
-    this.drag = null;
-    this.onstatus = null;
-    this.maxLevel = 40;
+    this.ctx = canvas.getContext('2d', { alpha: false });
+    this.cache = new Map(); this.pending = new Set();
+    this.maxCachedViews = 64;
+    this.manifest = null; this.viewUrl = null; this.drag = null;
+    this.onstatus = null; this.maxLevel = 24;
     this.dpr = window.devicePixelRatio || 1;
-
+    this.fetchTimer = null; this.generation = 0;
     this._onDown = e => this.onDown(e);
     this._onMove = e => this.onMove(e);
     this._onUp = () => this.endDrag();
@@ -45,47 +28,59 @@ class DeepZoom {
     window.addEventListener('blur', this._onUp);
   }
 
-  load(base, manifest, tileUrl) {
+  load(base, manifest, viewUrl) {
     this.base = (base || '').replace(/\/$/, '');
-    this.manifest = manifest || { tile: 256, levels: 0, cx: 0, cy: 0, span: 2 };
-    this.tileUrl = tileUrl || null;
-    this.cache.clear();
-    this.resize();
-    this.home();
+    this.manifest = manifest || { cx: 0, cy: 0, span: 2 };
+    this.viewUrl = viewUrl || null;
+    const detailBase = Number(this.manifest.detail_base ?? 7);
+    const detailMax = Number(this.manifest.detail_max ?? (detailBase + 7));
+    // Older runs did not record stable-grammar metadata; their safe fallback
+    // is seven refinement transitions, not their obsolete image-pyramid cap.
+    this.maxLevel = Math.max(0, Math.min(12, Math.floor(detailMax - detailBase)));
+    this.cache.clear(); this.pending.clear(); this.generation++;
+    this.resize(); this.home();
   }
 
   resize() {
-    const c = this.canvas, r = c.getBoundingClientRect();
+    const r = this.canvas.getBoundingClientRect();
     this.dpr = window.devicePixelRatio || 1;
-    c.width = Math.max(1, Math.round(r.width * this.dpr));
-    c.height = Math.max(1, Math.round(r.height * this.dpr));
-    if (this.manifest) this.draw();
+    this.canvas.width = Math.max(1, Math.round(r.width * this.dpr));
+    this.canvas.height = Math.max(1, Math.round(r.height * this.dpr));
+    if (this.manifest) this.draw(true);
   }
 
   home() {
-    const m = this.manifest; if (!m) return;
-    this.cx = m.cx; this.cy = m.cy;
-    this.scale = Math.min(this.canvas.width, this.canvas.height) / m.span;
+    if (!this.manifest) return;
+    this.cx = this.manifest.cx; this.cy = this.manifest.cy;
+    this.scale = Math.min(this.canvas.width, this.canvas.height) / this.manifest.span;
     this.minScale = this.scale;
-    this.draw();
+    this.draw(true);
   }
 
   get zoomFactor() { return this.scale / this.minScale; }
 
   toWorld(px, py) {
-    const c = this.canvas;
-    return {
-      x: this.cx + (px * this.dpr - c.width / 2) / this.scale,
-      y: this.cy - (py * this.dpr - c.height / 2) / this.scale,
-    };
+    return { x: this.cx + (px * this.dpr - this.canvas.width / 2) / this.scale,
+             y: this.cy - (py * this.dpr - this.canvas.height / 2) / this.scale };
   }
 
-  // Level whose tiles are closest to 1:1 on screen. Rounding (not flooring)
-  // keeps the worst-case scaling to sqrt(2) either way.
   targetLevel() {
-    const m = this.manifest;
-    const want = Math.log2(m.span * this.scale / m.tile);
-    return Math.max(0, Math.min(this.maxLevel, Math.round(want)));
+    return Math.max(0, Math.min(this.maxLevel, Math.floor(Math.log2(this.zoomFactor))));
+  }
+
+  detailBlend() {
+    const level = this.targetLevel();
+    if (level >= this.maxLevel) return 0;
+    const fractional = Math.max(0, Math.min(1, Math.log2(this.zoomFactor) - level));
+    // Cubic easing fades only the next-depth residual; it never swaps the
+    // current crystal for an unrelated one.
+    return fractional * fractional * (3 - 2 * fractional);
+  }
+
+  worldBounds() {
+    const c = this.canvas, span = c.width / this.scale, spanY = c.height / this.scale;
+    return { left: this.cx - span / 2, right: this.cx + span / 2,
+             top: this.cy + spanY / 2, bottom: this.cy - spanY / 2, span, spanY };
   }
 
   zoomAt(factor, px, py) {
@@ -94,8 +89,7 @@ class DeepZoom {
     const maxScale = this.minScale * Math.pow(2, this.maxLevel);
     this.scale = Math.max(this.minScale, Math.min(maxScale, this.scale * factor));
     const after = this.toWorld(px, py);
-    this.cx += before.x - after.x;
-    this.cy += before.y - after.y;
+    this.cx += before.x - after.x; this.cy += before.y - after.y;
     this.draw();
   }
 
@@ -117,7 +111,6 @@ class DeepZoom {
   onMove(e) {
     if (!this.drag) return;
     if (e.buttons === 0) { this.endDrag(); return; }
-    e.stopPropagation();
     this.cx -= (e.clientX - this.drag.x) * this.dpr / this.scale;
     this.cy += (e.clientY - this.drag.y) * this.dpr / this.scale;
     this.drag.x = e.clientX; this.drag.y = e.clientY;
@@ -126,85 +119,105 @@ class DeepZoom {
 
   endDrag() {
     if (!this.drag) return;
-    const id = this.drag.id;
-    this.drag = null;
+    const id = this.drag.id; this.drag = null;
     this.canvas.classList.remove('isPanning');
-    try { if (id !== undefined) this.canvas.releasePointerCapture(id); } catch (_) {}
+    try { this.canvas.releasePointerCapture(id); } catch (_) {}
   }
 
   destroy() {
+    clearTimeout(this.fetchTimer);
     window.removeEventListener('pointerup', this._onUp);
     window.removeEventListener('blur', this._onUp);
     this.drag = null;
   }
 
-  tile(level, col, row) {
-    const key = `${level}/${col}/${row}`;
-    const hit = this.cache.get(key);
-    if (hit) return hit.ok ? hit.img : null;
-    // Cap concurrency: each miss is a real render on the server, and firing a
-    // whole screen's worth at once just delays every one of them.
-    if (this.inflight >= 6) return null;
-    const img = new Image();
-    const entry = { img, ok: false };
-    this.cache.set(key, entry);
-    this.inflight++;
-    img.onload = () => { entry.ok = true; this.inflight--; this.draw(); };
-    img.onerror = () => { entry.failed = true; this.inflight--; };
-    // Baked levels are static files; anything deeper is rendered on demand.
-    img.src = (this.tileUrl && level > (this.manifest.levels || 0))
-      ? `${this.tileUrl}?level=${level}&col=${col}&row=${row}&tile=${this.manifest.tile}`
-      : `${this.base}/L${level}/${col}_${row}.jpg`;
-    return null;
+  requestSpec(level) {
+    const b = this.worldBounds(), step = b.span * .25;
+    const cx = Math.round(this.cx / step) * step, cy = Math.round(this.cy / step) * step;
+    const span = b.span * 1.5;
+    const width = Math.max(768, Math.min(1600, Math.round(this.canvas.width)));
+    const height = Math.max(432, Math.min(1000, Math.round(width * this.canvas.height / this.canvas.width)));
+    const key = `${level}/${cx.toPrecision(14)}/${cy.toPrecision(14)}/${span.toPrecision(14)}/${width}x${height}`;
+    return { key, level, cx, cy, span, width, height };
   }
 
-  drawLevel(level, left, right, top, bottom) {
-    const m = this.manifest;
-    const n = Math.pow(2, level), sub = m.span / n;
-    const bx = m.cx - m.span / 2, by = m.cy + m.span / 2;
-    const c0 = Math.max(0, Math.floor((left - bx) / sub));
-    const c1 = Math.min(n - 1, Math.ceil((right - bx) / sub));
-    const r0 = Math.max(0, Math.floor((by - top) / sub));
-    const r1 = Math.min(n - 1, Math.ceil((by - bottom) / sub));
-    // A pathological view would ask for thousands of tiles; clamp so a bad
-    // frame degrades instead of hanging the browser.
-    if ((c1 - c0 + 1) * (r1 - r0 + 1) > 240) return 0;
-    let drawn = 0;
-    for (let col = c0; col <= c1; col++) {
-      for (let row = r0; row <= r1; row++) {
-        const img = this.tile(level, col, row);
-        if (!img) continue;
-        const sx = (bx + sub * col - left) * this.scale;
-        const sy = (top - (by - sub * row)) * this.scale;
-        const size = sub * this.scale;
-        this.ctx.drawImage(img, sx, sy, size + 1, size + 1);
-        drawn++;
+  scheduleFetch(immediate = false) {
+    clearTimeout(this.fetchTimer);
+    this.fetchTimer = setTimeout(() => {
+      const level = this.targetLevel();
+      this.fetchView(level);
+      // Fetch the next cumulative depth alongside the current one.  It is
+      // composited as a colour residual while the user crosses this octave.
+      if (level < this.maxLevel) this.fetchView(level + 1);
+    }, immediate ? 0 : 100);
+  }
+
+  fetchView(level) {
+    if (!this.viewUrl || !this.manifest) return;
+    const spec = this.requestSpec(level);
+    if (this.cache.has(spec.key) || this.pending.has(spec.key)) return;
+    this.pending.add(spec.key);
+    const generation = this.generation, image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      this.pending.delete(spec.key);
+      if (generation !== this.generation) return;
+      this.cache.set(spec.key, { ...spec, image });
+      while (this.cache.size > this.maxCachedViews) this.cache.delete(this.cache.keys().next().value);
+      this.draw(false);
+    };
+    image.onerror = () => { this.pending.delete(spec.key); };
+    image.src = `${this.viewUrl}?cx=${encodeURIComponent(spec.cx)}&cy=${encodeURIComponent(spec.cy)}` +
+      `&span=${encodeURIComponent(spec.span)}&w=${spec.width}&h=${spec.height}&level=${spec.level}`;
+  }
+
+  bestView(bounds, level) {
+    let best = null, bestScore = Infinity;
+    for (const view of this.cache.values()) {
+      if (view.level !== level) continue;
+      const aspect = view.height / view.width, halfX = view.span / 2, halfY = view.span * aspect / 2;
+      const overlapX = Math.max(0, Math.min(bounds.right, view.cx + halfX) - Math.max(bounds.left, view.cx - halfX));
+      const overlapY = Math.max(0, Math.min(bounds.top, view.cy + halfY) - Math.max(bounds.bottom, view.cy - halfY));
+      const coverage = overlapX * overlapY / Math.max(1e-30, bounds.span * bounds.spanY);
+      const score = (1 - coverage) * 10 + Math.abs(Math.log(view.span / (bounds.span * 1.5)));
+      if (score < bestScore) { bestScore = score; best = view; }
+    }
+    return best;
+  }
+
+  draw(immediate = false) {
+    if (!this.manifest) return;
+    const c = this.canvas, ctx = this.ctx, b = this.worldBounds();
+    ctx.fillStyle = '#03060f'; ctx.fillRect(0, 0, c.width, c.height);
+    const drawView = (view, alpha = 1) => {
+      if (!view) return;
+      const aspect = view.height / view.width;
+      const left = view.cx - view.span / 2, top = view.cy + view.span * aspect / 2;
+      const sourceLeft = view.cx - view.span / 2, sourceRight = view.cx + view.span / 2;
+      const sourceTop = view.cy + view.span * aspect / 2, sourceBottom = view.cy - view.span * aspect / 2;
+      const coverageX = Math.max(0, Math.min(b.right, sourceRight) - Math.max(b.left, sourceLeft));
+      const coverageY = Math.max(0, Math.min(b.top, sourceTop) - Math.max(b.bottom, sourceBottom));
+      ctx.imageSmoothingEnabled = true;
+      ctx.globalAlpha = alpha;
+      // On a rapid zoom-out an old source may not yet cover the new edges.
+      // Fill with that source temporarily rather than flashing a navy canvas;
+      // the exact coherent image replaces it as soon as the debounced request
+      // completes.
+      if (coverageX * coverageY < b.span * b.spanY * .98) {
+        ctx.drawImage(view.image, 0, 0, c.width, c.height);
+      } else {
+        ctx.drawImage(view.image, (left - b.left) * this.scale, (b.top - top) * this.scale,
+                      view.span * this.scale, view.span * aspect * this.scale);
       }
-    }
-    return drawn;
-  }
-
-  draw() {
-    const m = this.manifest; if (!m) return;
-    const c = this.canvas, ctx = this.ctx;
-    ctx.fillStyle = '#03060f';
-    ctx.fillRect(0, 0, c.width, c.height);
-    ctx.imageSmoothingEnabled = true;
-
-    const left = this.cx - c.width / 2 / this.scale;
-    const top = this.cy + c.height / 2 / this.scale;
-    const right = left + c.width / this.scale;
-    const bottom = top - c.height / this.scale;
-    const target = this.targetLevel();
-
-    // Progressive backdrop: a few coarser levels, then the target on top.
-    // Only a handful, otherwise every draw walks 40 levels of tile lookups.
-    for (let l = Math.max(0, target - 3); l < target; l++) {
-      this.drawLevel(l, left, right, top, bottom);
-    }
-    this.drawLevel(target, left, right, top, bottom);
-
-    if (this.onstatus) this.onstatus(this.zoomFactor, target, this.maxLevel);
+      ctx.globalAlpha = 1;
+    };
+    const level = this.targetLevel();
+    const coarse = this.bestView(b, level);
+    const fine = level < this.maxLevel ? this.bestView(b, level + 1) : null;
+    drawView(coarse || fine);
+    if (coarse && fine) drawView(fine, this.detailBlend());
+    this.scheduleFetch(immediate);
+    if (this.onstatus) this.onstatus(this.zoomFactor, level, this.maxLevel);
   }
 }
 window.DeepZoom = DeepZoom;

@@ -1,132 +1,136 @@
 # Running on Leonardo
 
-This repository was designed around the workflow described in the supplied CINECA Leonardo introduction: log in through CINECA access, submit long work to compute nodes with **SLURM**, use the GPU-accelerated **Booster** for CUDA workloads, and keep large transient output in the appropriate shared filesystem rather than trying to render on the login node.
+The compute side of this project is headless: it writes JPEG frames and JSON
+metadata without OpenGL, X11, or a web server. This is the right shape for
+Leonardo's batch nodes and remains compatible with CINECA's current mitigation
+that disables Xorg on Booster GPU nodes.
 
-## 1. Account and access
+The two supported allocations are intentionally separate:
 
-Before event day confirm:
+| Mode | Partition | Job shape | Implementation |
+|---|---|---|---|
+| CPU | `dcgp_usr_prod` | 1 process, 32 CPU cores | NumPy plus chunked shared-memory tracer updates |
+| GPU / hybrid | `boost_usr_prod` | 1 process, 1 A100, 8 CPU cores | CuPy solver; hybrid overlaps CPU JPEG encoding |
 
-- your HPC username works;
-- the event project account is active;
-- the account has Booster budget;
-- the exact project-account string for `#SBATCH --account=...`;
-- the allowed `boost_usr_prod` / QoS limits for the event;
-- which datamover/login hostname the organisers want you to use for transfers.
+Leonardo Booster nodes have 32 CPU cores and four 64 GiB A100 GPUs. DCGP nodes
+have 112 CPU cores and no GPUs. This demo asks only for the slice it can use;
+it does not reserve a whole DCGP node or four A100s merely to make the resource
+request look larger.
 
-The example scripts default to `EUHPC_TDEMO_26` because it appears in the supplied training slides. Change it through:
+## 1. Configure the account and paths
 
-```bash
-export LEONARDO_ACCOUNT=YOUR_REAL_ACCOUNT
-```
-
-Do not assume that the training account name or its expiry applies to the actual event.
-
-## 2. Prepare the Python environment
-
-### Safe first test
-
-Use NumPy only. This verifies paths, SLURM, output and synchronisation before CUDA dependencies are involved.
+On Leonardo, copy the example and edit the real project-account value:
 
 ```bash
-python -m venv $WORK/venvs/leonardo-demos
-source $WORK/venvs/leonardo-demos/bin/activate
-pip install -r requirements.txt
+cp config/leonardo.env.example config/leonardo.env
+saldo -b
 ```
 
-Internet access/pip availability can differ on HPC systems. If package download is unavailable, build the venv/container ahead of time using the CINECA-recommended software stack or ask support which Python/FastAPI/Pillow modules are available.
+`config/leonardo.env` is ignored by Git. The submission wrapper requires an
+explicit `LEONARDO_ACCOUNT`; it will not silently charge a training account
+copied from a slide deck. Confirm that the account is entitled to the selected
+partition and QoS.
 
-### GPU mode
+Output defaults to `$FAST/leonardo_visual_demos`. `$FAST` is shared and suited
+to the frame stream. Booster nodes are diskless and expose only a fixed 10 GiB
+RAM-backed temporary area, so the job does not stage a complete run in
+`$TMPDIR`.
 
-For CuPy/PyTorch, install builds compatible with the CUDA stack active on Leonardo. Do **not** copy a random local CUDA wheel and assume ABI compatibility.
+## 2. Prepare one tested Python environment
 
-Test:
+CPU-only setup:
 
 ```bash
-python - <<'PY'
-import cupy as cp
-print(cp.cuda.runtime.getDeviceCount())
-a=cp.arange(10); print((a*a).get())
-PY
+module purge
+module load profile/base
+python3 -m venv "$WORK/venvs/leonardo-visual-demos"
+source "$WORK/venvs/leonardo-visual-demos/bin/activate"
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-Then:
+For the CuPy demos on Booster, load Leonardo's CUDA 12.2 module and install the
+CUDA 12 wheel family:
 
 ```bash
-export LEONARDO_DEMO_BACKEND=cupy
+module load cuda/12.2
+python -m pip install -r requirements-gpu.txt
 ```
 
-### GPU + CPU pipeline
+Do not install the CUDA 13 Windows lock on Leonardo. `requirements-gpu.txt`
+contains CuPy for the CUDA 12 family; `requirements-gpu-windows.txt` is only
+for the separately tested exhibition workstation. The neural-network wall is
+the sole PyTorch demo. If it must train on a Leonardo GPU, prefer a CINECA
+`cineca-ai` module and create the environment with `--system-site-packages`.
 
-Use `LEONARDO_DEMO_BACKEND=hybrid` when one GPU should evolve the model while
-the host CPU encodes the presentation frames and writes them to disk in
-parallel. The provided Booster job already requests one GPU and eight CPU
-cores, which is the correct single-node shape for this mode. See
-[`HYBRID_COMPUTE.md`](HYBRID_COMPUTE.md) for the exact division of work and
-the distinction between a Booster CPU and a separate DCGP CPU-only job.
+An alternative is a pre-built Singularity image. See `container/README.md` and
+set `LEONARDO_CONTAINER` instead of `LEONARDO_VENV`.
 
-## 3. Submit one demo
+## 3. Submit and validate
+
+The fourth wrapper argument chooses the allocation and backend:
 
 ```bash
-export LEONARDO_ACCOUNT=YOUR_ACCOUNT
-export LEONARDO_RUNROOT=$FAST/leonardo_visual_demos
-bash scripts/submit_leonardo.sh reaction_diffusion 90 leonardo
+# DCGP shared-memory CPU run
+bash scripts/submit_leonardo.sh galaxy_collision 90 leonardo cpu
+
+# Booster: solver on one A100
+bash scripts/submit_leonardo.sh galaxy_collision 90 leonardo gpu
+
+# Booster: A100 solver plus overlapping CPU frame encoding
+bash scripts/submit_leonardo.sh galaxy_collision 90 leonardo hybrid
 ```
 
-Or directly:
+The wrapper selects `slurm/run_demo_cpu.sbatch` for CPU work and
+`slurm/run_demo.sbatch` for GPU/hybrid work. Both bind the process to its
+allocated cores, propagate `SLURM_CPUS_PER_TASK`, write a unique job-id run
+directory, and execute `tools/leonardo_preflight.py` before the simulation.
+The preflight verifies imports, output writability, and—on Booster—the actual
+CuPy-visible device. Explicit GPU requests fail rather than silently falling
+back to NumPy.
 
-```bash
-sbatch --account=$LEONARDO_ACCOUNT --export=ALL,DEMO=black_hole,FRAMES=90,PROFILE=leonardo slurm/run_demo.sbatch
-```
+The example config uses the 30-minute debug QoS values. The job templates also
+request 30 minutes. For production runs, select a QoS allowed for the project
+and change the time limit in the job file if necessary.
 
-Monitor:
+Monitor with:
 
 ```bash
 squeue --me
 scontrol show job JOBID
 ```
 
-Cancel:
+## 4. CPU and GPU scope
+
+The collision is a restricted N-body model: each tracer feels the two moving
+galaxy potentials, so its cost is O(N), not the O(N²) all-pairs benchmark in
+the reference MUrB repository. On NumPy, disjoint tracer chunks execute in
+parallel using the cores granted to the process. On CuPy, all tracer state
+stays on the A100 through the leapfrog substeps and returns to the host once per
+frame for Pillow rendering.
+
+This code is single-process and single-GPU. Requesting four GPUs would waste
+three of them. Multi-GPU scaling should be added only for independent
+encounters/parameter sweeps or a real distributed solver, with one rank per
+GPU and explicit result collation.
+
+## 5. Transfer and playback fallback
+
+Synchronise completed frames from the presentation computer with the transfer
+host specified by the event organisers:
 
 ```bash
-scancel JOBID
+rsync -av USER@TRANSFER_HOST:/path/to/run/ ./runs/leonardo_live/
 ```
 
-## 4. Transfer frames while the job is running
+Generate at least one good run of each chosen demonstration before the event
+and keep copies on the event PC and removable storage. If a live job queues or
+the venue connection fails, label the replay honestly as a run computed
+earlier on Leonardo.
 
-On the presentation PC, synchronise the run directory every few seconds. `rsync` naturally skips frames already copied.
+## Official references
 
-```bash
-rsync -av USER@YOUR_CINECA_TRANSFER_HOST:/remote/run/path/ ./runs/leonardo_live/
-```
-
-You can then refresh the local viewer or place the synced folder directly under `runs/`.
-
-A future controller can automate this polling. For the first event version, keeping transfer and rendering loosely coupled is more robust.
-
-## 5. Playback fallback
-
-Generate at least one high-quality Leonardo run of every demonstration the day before the event. Keep two copies:
-
-- on the event PC;
-- on a USB/portable SSD.
-
-If a queue is long or connectivity fails, switch to playback and say clearly:
-
-> "This is a run computed earlier on Leonardo; we're replaying the saved simulation states."
-
-Do not imply that a cached run is live.
-
-## 6. Do not compute on login nodes
-
-The login node should be used for file preparation, compilation/environment setup, small checks and submission. The long simulations belong in SLURM jobs on compute nodes.
-
-## 7. Scale gradually
-
-The `leonardo` profile is a **starting target**, not a promise that every workload is optimally sized. Benchmark one demo at a time:
-
-1. one GPU, small resolution;
-2. one GPU, final single-GPU resolution;
-3. several independent ensemble tasks;
-4. only then introduce MPI/domain decomposition where it materially improves the demo.
-
-The strongest event story is often *many simulations at once*, not one enormous simulation that spends most of its time communicating.
+- [CINECA Leonardo hardware, filesystems, partitions, and current known issues](https://docs.hpc.cineca.it/hpc/leonardo.html)
+- [CINECA scheduler and job-submission guide](https://docs.hpc.cineca.it/hpc/hpc_scheduler.html)
+- [CINECA Singularity and Leonardo CUDA/container guidance](https://docs.hpc.cineca.it/services/singularity.html)
+- [CINECA Python `cineca-ai` environment guidance](https://docs.hpc.cineca.it/hpc/hpc_cineca-ai-hpyc.html)

@@ -4,3 +4,7 @@ __pycache__/
 runs/*
 !runs/.gitkeep
 .DS_Store
+config/leonardo.env
+benchmarks/artifacts/
+tmp/*.jpg
+tmp/*.png

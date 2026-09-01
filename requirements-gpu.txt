@@ -1,8 +1,9 @@
 -r requirements.txt
-# Verified on this Windows project environment with an RTX 3060 Ti and CUDA
-# 13.3 driver. CuPy uses CUDA 13; PyTorch's CUDA 13 wheel enables real neural
-# wall training. The NVIDIA driver is sufficient — no system-wide toolkit is
-# required for this setup.
---extra-index-url https://download.pytorch.org/whl/cu130
-cupy-cuda13x==14.2.0
-torch==2.13.0+cu130
+# Leonardo exposes CUDA 12.2 and NVIDIA A100 (compute capability 8.0).  Keep
+# the CuPy wheel on the CUDA 12 family; do not reuse the Windows CUDA 13 lock.
+cupy-cuda12x>=13,<15
+
+# PyTorch is optional and is used only by neural_wall.  On Leonardo prefer a
+# CINECA `cineca-ai` module whose CUDA build is validated by the site, then
+# create the venv with --system-site-packages.  Galaxy collision and the other
+# array demos do not require torch.

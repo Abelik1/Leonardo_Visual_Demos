@@ -1,12 +1,18 @@
 Bootstrap: docker
 From: nvidia/cuda:12.2.2-runtime-ubuntu22.04
 
+%files
+    requirements.txt /tmp/requirements.txt
+    requirements-gpu.txt /tmp/requirements-gpu.txt
+
 %post
-    apt-get update && apt-get install -y python3 python3-pip && rm -rf /var/lib/apt/lists/*
-    pip3 install numpy Pillow fastapi 'uvicorn[standard]' pydantic cupy-cuda12x
+    apt-get update && apt-get install -y --no-install-recommends python3 python3-pip \
+        && rm -rf /var/lib/apt/lists/*
+    python3 -m pip install --no-cache-dir -r /tmp/requirements-gpu.txt
 
 %environment
-    export LEONARDO_DEMO_BACKEND=auto
+    export LEONARDO_DEMO_BACKEND=hybrid
+    export PYTHONUNBUFFERED=1
 
 %runscript
     exec python3 "$@"

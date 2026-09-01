@@ -1,0 +1,5 @@
+-r requirements.txt
+# Exhibition-workstation lock, verified with an RTX 3060 Ti and CUDA 13 driver.
+--extra-index-url https://download.pytorch.org/whl/cu130
+cupy-cuda13x==14.2.0
+torch==2.13.0+cu130

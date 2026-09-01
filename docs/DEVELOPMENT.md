@@ -12,8 +12,12 @@ Keep these layers separate:
 
 1. **simulation state** - arrays/particles/fields;
 2. **headless renderer** - converts state to a frame;
-3. **story overlay** - titles, counters, reveal text;
-4. **web transitions** - fades/zoom/replay controls.
+3. **frame data** - small JSON readouts with no presentation markup;
+4. **web presentation** - HTML overlays, mode controls, transitions and zoom.
+
+The main JPEG stream must contain simulation imagery only. Put labels,
+counters, legends and control panels in the viewer so visitors can switch them
+independently and the same numerical frame can support different stories.
 
 Never change a scientific state merely because a camera transition looks better. Change how it is rendered.
 

@@ -47,18 +47,53 @@ version, use one rank per GPU and give each rank its matching CPU-core share;
 CINECA's current container example uses four tasks and eight CPUs per task for
 the four-GPU node.
 
+For the collision demo, a CPU-only run is more than a fallback. The restricted
+N-body update divides disjoint particle slices among the CPU cores granted by
+SLURM, while the GPU path keeps the full state in CuPy through each leapfrog
+step. Submit the two real resource shapes explicitly:
+
+```bash
+bash scripts/submit_leonardo.sh galaxy_collision 90 leonardo cpu
+bash scripts/submit_leonardo.sh galaxy_collision 90 leonardo hybrid
+```
+
+Do not submit `--backend cpu` through the Booster job: that reserves an A100 it
+will not use. Conversely, the DCGP template never probes or requests CUDA.
+
 ## What professional deep zoom does differently
 
-The crystal viewer uses a tiled image pyramid for immediate coarse previews,
-then creates and caches a native-resolution tile at each requested log2 zoom
-level. The browser therefore never uses a 300x CSS-scaled JPEG as the final
-image. This is the same broad image-pyramid approach used by Deep Zoom viewers.
+The crystal viewer does **not** independently regenerate neighbouring image
+tiles. A finite branch budget can make independently traversed tiles select
+different branches, producing visible seams and detail that appears from
+nowhere. Instead it uses one deterministic, addressable branch grammar: every
+branch's path key fixes its position, width and jitter, and generation *d* is
+an exact subset of generation *d + 1*.
+
+The browser requests a coherent cached viewport at the current generation and
+the next one. It displays the current pixel colours immediately and blends the
+next generation with a cubic fractional-log2-zoom weight. Thus only the new
+pixel-coverage residual fades in; existing crystal branches cannot move, vanish
+or be swapped for a different set. Views are debounced for 100 ms and retain
+the prior image while work is in flight. Revisited views are served from RAM or
+disk cache.
+
+There is also an experimental CUDA line-rasterizer for visible tiles. Set
+`LEONARDO_DEEPZOOM_BACKEND=gpu` before starting the server to profile it. The
+default is deliberately `auto` (CPU): on this desktop, the GPU path measured
+about 0.58 s for a warmed 256 px tile and 4.22 s for 512 px, versus 0.08 s and
+0.16 s with Pillow on CPU. The recursive branch construction is CPU work, and
+many small GPU atomic line writes cost more than the CPU scanline rasterizer.
+The serving process alone may use CUDA; its CPU geometry workers do not create
+GPU contexts. This keeps navigation on the fastest measured implementation,
+while retaining the GPU implementation for future denser/vectorized renderers.
 
 For escape-time sets such as Mandelbrot, serious *extreme* deep zoom renderers
 add arbitrary-precision reference orbits and perturbation/series methods. That
-is a different numerical problem from this procedural crystal generator; its
-fix is regenerating the geometry from the rule at each tile scale. The current
-limit of level 40 is about 1.1 trillion times the base view, well beyond the
-requested 300x, while keeping tile indices and IEEE double coordinates safe.
+is a different numerical problem from this procedural crystal. Here each run
+has a finite recorded branch range (`zoom_detail_base` through
+`zoom_detail_max`): 7–14 locally, 8–16 on desktop and 9–18 on Leonardo. Those
+values are configurable in `config/profiles.json`; after the final generation,
+the viewer stops adding new geometry and continues to navigate the final
+filtered coverage image.
 
 Sources consulted: [CINECA Leonardo hardware and partitions](https://docs.hpc.cineca.it/hpc/leonardo.html), [CINECA's GPU container resource example](https://docs.hpc.cineca.it/services/singularity.html), and [Ultra Fractal's perturbation overview](https://www.ultrafractal.com/help/formulas/perturbationcalculations.html).

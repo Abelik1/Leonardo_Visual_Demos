@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Leonardo Demo Benchmarks</title>
+  <link rel="stylesheet" href="report.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">EUROHPC · PERFORMANCE AUDIT</p>
+      <h1>Leonardo visual demo benchmarks</h1>
+      <p id="summary">Loading measured results…</p>
+    </header>
+    <section class="cards" id="cards"></section>
+    <section>
+      <div class="section-head"><div><p class="eyebrow">MEASURED MATRIX</p><h2>CPU, CUDA, and pipelined output</h2></div><div class="legend"><span class="cpu">CPU</span><span class="gpu">GPU</span><span class="hybrid">HYBRID</span></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Demo</th><th>Method</th><th>Mode</th><th>Total</th><th>Solver</th><th>Render</th><th>JPEG</th><th>Write</th><th>CPU→GPU</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+    </section>
+    <section>
+      <p class="eyebrow">STAGE BREAKDOWN</p><h2>Where each run spends its time</h2>
+      <div id="breakdowns" class="breakdowns"></div>
+    </section>
+    <section class="notes"><p class="eyebrow">INTERPRETATION</p><h2>Benchmark boundaries</h2><ul id="notes"></ul></section>
+  </main>
+  <script src="report.js"></script>
+</body>
+</html>

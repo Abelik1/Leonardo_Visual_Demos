@@ -1,0 +1,1548 @@
+{
+  "schema_version": 1,
+  "created": 1788202433.2552812,
+  "created_iso": "2026-08-31T19:53:53+0100",
+  "profile": "benchmark",
+  "frames": 4,
+  "python": ".\\.venv\\Scripts\\python.exe",
+  "environment": {
+    "hostname": "AlexMainDesktop",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+    "logical_cpus": 16,
+    "backends": {
+      "cpu": {
+        "available": true,
+        "label": "CPU (NumPy)",
+        "detail": "NumPy 2.5.2"
+      },
+      "gpu": {
+        "available": true,
+        "label": "GPU (CuPy)",
+        "detail": "1x NVIDIA GeForce RTX 3060 Ti"
+      },
+      "torch": {
+        "available": true,
+        "label": "PyTorch CUDA",
+        "detail": "NVIDIA GeForce RTX 3060 Ti"
+      },
+      "hybrid": {
+        "available": true,
+        "label": "GPU + CPU pipeline",
+        "detail": "CUDA solver with CPU frame encoding and disk I/O in parallel"
+      }
+    },
+    "slurm_job_id": null,
+    "slurm_partition": null
+  },
+  "results": [
+    {
+      "demo": "black_hole",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.3464892000010877,
+      "run_elapsed_seconds": 0.9334075450897217,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.0042530999999144115,
+          "count": 5,
+          "max_seconds": 0.001002399996650638,
+          "average_seconds": 0.0008506199999828822
+        },
+        "initialization": {
+          "seconds": 0.047541599997202866,
+          "count": 2,
+          "max_seconds": 0.042001099998742575,
+          "average_seconds": 0.023770799998601433
+        },
+        "jpeg_encode": {
+          "seconds": 0.023228000001836335,
+          "count": 5,
+          "max_seconds": 0.015783200000441866,
+          "average_seconds": 0.004645600000367267
+        },
+        "render": {
+          "seconds": 0.060584799997741356,
+          "count": 3,
+          "max_seconds": 0.020928900001308648,
+          "average_seconds": 0.02019493333258045
+        },
+        "simulation": {
+          "seconds": 0.5402283000039461,
+          "count": 13,
+          "max_seconds": 0.4314598999990267,
+          "average_seconds": 0.04155602307722662
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\black_hole_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "black_hole",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.4580476000010094,
+      "run_elapsed_seconds": 1.0089352130889893,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003967999997257721,
+          "count": 5,
+          "max_seconds": 0.0008658999977342319,
+          "average_seconds": 0.0007935999994515442
+        },
+        "initialization": {
+          "seconds": 0.0452759000036167,
+          "count": 2,
+          "max_seconds": 0.03957830000217655,
+          "average_seconds": 0.02263795000180835
+        },
+        "jpeg_encode": {
+          "seconds": 0.022945199998503085,
+          "count": 5,
+          "max_seconds": 0.015540699998382479,
+          "average_seconds": 0.004589039999700617
+        },
+        "render": {
+          "seconds": 0.05907070000102976,
+          "count": 3,
+          "max_seconds": 0.020111800000449875,
+          "average_seconds": 0.019690233333676588
+        },
+        "simulation": {
+          "seconds": 0.13388609999674372,
+          "count": 13,
+          "max_seconds": 0.10554459999912069,
+          "average_seconds": 0.010298930768980287
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\black_hole_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "black_hole",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.4391045999982452,
+      "run_elapsed_seconds": 0.9996457099914551,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0024816999975882936,
+          "count": 5,
+          "max_seconds": 0.0005241999970166944,
+          "average_seconds": 0.0004963399995176587
+        },
+        "frame_write": {
+          "seconds": 0.004145900002185954,
+          "count": 5,
+          "max_seconds": 0.000844999998662388,
+          "average_seconds": 0.0008291800004371908
+        },
+        "initialization": {
+          "seconds": 0.04524100000344333,
+          "count": 2,
+          "max_seconds": 0.03999930000281893,
+          "average_seconds": 0.022620500001721666
+        },
+        "jpeg_encode": {
+          "seconds": 0.025711000002047513,
+          "count": 5,
+          "max_seconds": 0.018447099999320926,
+          "average_seconds": 0.005142200000409503
+        },
+        "render": {
+          "seconds": 0.06061290000070585,
+          "count": 3,
+          "max_seconds": 0.020926799999870127,
+          "average_seconds": 0.020204300000235282
+        },
+        "simulation": {
+          "seconds": 0.14177499999277643,
+          "count": 13,
+          "max_seconds": 0.11173649999909685,
+          "average_seconds": 0.010905769230213571
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\black_hole_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "pbh",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 0.7358165999976336,
+      "run_elapsed_seconds": 0.34543418884277344,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003958199999033241,
+          "count": 5,
+          "max_seconds": 0.0008347999973921105,
+          "average_seconds": 0.0007916399998066481
+        },
+        "jpeg_encode": {
+          "seconds": 0.0239651000010781,
+          "count": 5,
+          "max_seconds": 0.01733289999901899,
+          "average_seconds": 0.0047930200002156195
+        },
+        "render": {
+          "seconds": 0.17009820000021136,
+          "count": 20,
+          "max_seconds": 0.03468989999964833,
+          "average_seconds": 0.008504910000010569
+        },
+        "simulation": {
+          "seconds": 0.0007143000038922764,
+          "count": 20,
+          "max_seconds": 9.210000280290842e-05,
+          "average_seconds": 3.571500019461382e-05
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\pbh_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "pbh",
+      "backend_requested": "gpu",
+      "backend": null,
+      "method": "default",
+      "status": "unsupported",
+      "wall_seconds": null,
+      "run_elapsed_seconds": null,
+      "timings": {},
+      "run_dir": null,
+      "returncode": null,
+      "error": "supported backends: cpu"
+    },
+    {
+      "demo": "pbh",
+      "backend_requested": "hybrid",
+      "backend": null,
+      "method": "default",
+      "status": "unsupported",
+      "wall_seconds": null,
+      "run_elapsed_seconds": null,
+      "timings": {},
+      "run_dir": null,
+      "returncode": null,
+      "error": "supported backends: cpu"
+    },
+    {
+      "demo": "fluid",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 2.1005001999983506,
+      "run_elapsed_seconds": 1.6795063018798828,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.00392239999564481,
+          "count": 5,
+          "max_seconds": 0.0008381999978155363,
+          "average_seconds": 0.0007844799991289619
+        },
+        "initialization": {
+          "seconds": 0.01620090000142227,
+          "count": 1,
+          "max_seconds": 0.01620090000142227,
+          "average_seconds": 0.01620090000142227
+        },
+        "jpeg_encode": {
+          "seconds": 0.026132099999813363,
+          "count": 5,
+          "max_seconds": 0.016419600000517676,
+          "average_seconds": 0.005226419999962673
+        },
+        "render": {
+          "seconds": 0.09609230000205571,
+          "count": 4,
+          "max_seconds": 0.024808000001939945,
+          "average_seconds": 0.024023075000513927
+        },
+        "simulation": {
+          "seconds": 0.9780754999992496,
+          "count": 4,
+          "max_seconds": 0.2500484999982291,
+          "average_seconds": 0.2445188749998124
+        },
+        "visualization": {
+          "seconds": 0.0025504999975964893,
+          "count": 4,
+          "max_seconds": 0.0007731000005151145,
+          "average_seconds": 0.0006376249993991223
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\fluid_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "fluid",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 6.15774059999967,
+      "run_elapsed_seconds": 5.717215538024902,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004552799993689405,
+          "count": 5,
+          "max_seconds": 0.001046399996994296,
+          "average_seconds": 0.0009105599987378809
+        },
+        "initialization": {
+          "seconds": 0.11320160000104806,
+          "count": 1,
+          "max_seconds": 0.11320160000104806,
+          "average_seconds": 0.11320160000104806
+        },
+        "jpeg_encode": {
+          "seconds": 0.026075599995238008,
+          "count": 5,
+          "max_seconds": 0.01568090000000666,
+          "average_seconds": 0.005215119999047601
+        },
+        "render": {
+          "seconds": 0.10053890000199317,
+          "count": 4,
+          "max_seconds": 0.029930900000181282,
+          "average_seconds": 0.025134725000498293
+        },
+        "simulation": {
+          "seconds": 4.800928400007251,
+          "count": 4,
+          "max_seconds": 1.2324450000014622,
+          "average_seconds": 1.2002321000018128
+        },
+        "visualization": {
+          "seconds": 0.002561799996328773,
+          "count": 4,
+          "max_seconds": 0.0007882999998400919,
+          "average_seconds": 0.0006404499990821932
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\fluid_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "fluid",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 6.174217499999941,
+      "run_elapsed_seconds": 5.723479270935059,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0028238000013516285,
+          "count": 5,
+          "max_seconds": 0.000660100002278341,
+          "average_seconds": 0.0005647600002703257
+        },
+        "frame_write": {
+          "seconds": 0.00469909999446827,
+          "count": 5,
+          "max_seconds": 0.0010493999980099034,
+          "average_seconds": 0.0009398199988936539
+        },
+        "initialization": {
+          "seconds": 0.11254689999987022,
+          "count": 1,
+          "max_seconds": 0.11254689999987022,
+          "average_seconds": 0.11254689999987022
+        },
+        "jpeg_encode": {
+          "seconds": 0.029073200003040256,
+          "count": 5,
+          "max_seconds": 0.018457300000591204,
+          "average_seconds": 0.005814640000608051
+        },
+        "render": {
+          "seconds": 0.09814239999468555,
+          "count": 4,
+          "max_seconds": 0.025209899999026675,
+          "average_seconds": 0.024535599998671387
+        },
+        "simulation": {
+          "seconds": 4.837568399998418,
+          "count": 4,
+          "max_seconds": 1.3016810000008263,
+          "average_seconds": 1.2093920999996044
+        },
+        "visualization": {
+          "seconds": 0.0030322999991767574,
+          "count": 4,
+          "max_seconds": 0.001067599998350488,
+          "average_seconds": 0.0007580749997941894
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\fluid_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "cosmic_web",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.555222400002094,
+      "run_elapsed_seconds": 3.1415510177612305,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004253999999491498,
+          "count": 5,
+          "max_seconds": 0.0011296999982732814,
+          "average_seconds": 0.0008507999998982995
+        },
+        "initialization": {
+          "seconds": 0.04135009998208261,
+          "count": 17,
+          "max_seconds": 0.02148959999976796,
+          "average_seconds": 0.002432358822475448
+        },
+        "jpeg_encode": {
+          "seconds": 0.02422879999721772,
+          "count": 5,
+          "max_seconds": 0.015570600000501145,
+          "average_seconds": 0.004845759999443544
+        },
+        "render": {
+          "seconds": 0.41508410001915763,
+          "count": 20,
+          "max_seconds": 0.3953346000016609,
+          "average_seconds": 0.02075420500095788
+        },
+        "simulation": {
+          "seconds": 2.4946830999979284,
+          "count": 20,
+          "max_seconds": 0.14379119999648537,
+          "average_seconds": 0.12473415499989642
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\cosmic_web_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "cosmic_web",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 9.047061799999938,
+      "run_elapsed_seconds": 8.596583604812622,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003881500000716187,
+          "count": 5,
+          "max_seconds": 0.0008717999990039971,
+          "average_seconds": 0.0007763000001432374
+        },
+        "initialization": {
+          "seconds": 0.047202899997500936,
+          "count": 17,
+          "max_seconds": 0.02024330000131158,
+          "average_seconds": 0.0027766411763235845
+        },
+        "jpeg_encode": {
+          "seconds": 0.025763199999346398,
+          "count": 5,
+          "max_seconds": 0.017131599997810554,
+          "average_seconds": 0.00515263999986928
+        },
+        "render": {
+          "seconds": 0.025883400008751778,
+          "count": 20,
+          "max_seconds": 0.004404100000101607,
+          "average_seconds": 0.0012941700004375889
+        },
+        "simulation": {
+          "seconds": 7.825378600002296,
+          "count": 20,
+          "max_seconds": 0.527391899999202,
+          "average_seconds": 0.39126893000011476
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\cosmic_web_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "cosmic_web",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 8.89164769999843,
+      "run_elapsed_seconds": 8.429232597351074,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0026685000011639204,
+          "count": 5,
+          "max_seconds": 0.0005725000009988435,
+          "average_seconds": 0.0005337000002327841
+        },
+        "frame_write": {
+          "seconds": 0.0042416999967827,
+          "count": 5,
+          "max_seconds": 0.0010254000007989816,
+          "average_seconds": 0.0008483399993565399
+        },
+        "initialization": {
+          "seconds": 0.04641629999605357,
+          "count": 17,
+          "max_seconds": 0.020324100001744227,
+          "average_seconds": 0.002730370588003151
+        },
+        "jpeg_encode": {
+          "seconds": 0.026429400000779424,
+          "count": 5,
+          "max_seconds": 0.017639199999393895,
+          "average_seconds": 0.005285880000155885
+        },
+        "render": {
+          "seconds": 0.024939499999163672,
+          "count": 20,
+          "max_seconds": 0.004304400001274189,
+          "average_seconds": 0.0012469749999581836
+        },
+        "simulation": {
+          "seconds": 7.686612700003025,
+          "count": 20,
+          "max_seconds": 0.48172409999824595,
+          "average_seconds": 0.38433063500015124
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\cosmic_web_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.7772046999998565,
+      "run_elapsed_seconds": 1.3575029373168945,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004196299996692687,
+          "count": 5,
+          "max_seconds": 0.0009433000013814308,
+          "average_seconds": 0.0008392599993385375
+        },
+        "initialization": {
+          "seconds": 0.031166599997959565,
+          "count": 17,
+          "max_seconds": 0.018606900001032045,
+          "average_seconds": 0.0018333294116446802
+        },
+        "jpeg_encode": {
+          "seconds": 0.024498700004187413,
+          "count": 5,
+          "max_seconds": 0.015691600001446204,
+          "average_seconds": 0.0048997400008374825
+        },
+        "render": {
+          "seconds": 0.4787785000044096,
+          "count": 22,
+          "max_seconds": 0.10815589999765507,
+          "average_seconds": 0.021762659091109526
+        },
+        "simulation": {
+          "seconds": 0.23271459998431965,
+          "count": 164,
+          "max_seconds": 0.005549699999392033,
+          "average_seconds": 0.0014189914633190223
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\galaxy_collision_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.074820000001637,
+      "run_elapsed_seconds": 2.636003255844116,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003906100002495805,
+          "count": 5,
+          "max_seconds": 0.0008655000019643921,
+          "average_seconds": 0.0007812200004991609
+        },
+        "initialization": {
+          "seconds": 0.03631780000796425,
+          "count": 17,
+          "max_seconds": 0.017515200001071207,
+          "average_seconds": 0.0021363411769390736
+        },
+        "jpeg_encode": {
+          "seconds": 0.023780100000294624,
+          "count": 5,
+          "max_seconds": 0.015446699999301927,
+          "average_seconds": 0.004756020000058925
+        },
+        "render": {
+          "seconds": 0.4621054000017466,
+          "count": 22,
+          "max_seconds": 0.10499549999804003,
+          "average_seconds": 0.0210047909091703
+        },
+        "simulation": {
+          "seconds": 1.4207403999971575,
+          "count": 164,
+          "max_seconds": 0.12096780000138097,
+          "average_seconds": 0.008663051219494863
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\galaxy_collision_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.0680308000009973,
+      "run_elapsed_seconds": 2.616429090499878,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0026327000014134683,
+          "count": 5,
+          "max_seconds": 0.000562299999728566,
+          "average_seconds": 0.0005265400002826936
+        },
+        "frame_write": {
+          "seconds": 0.0043064000019512605,
+          "count": 5,
+          "max_seconds": 0.00105249999978696,
+          "average_seconds": 0.0008612800003902521
+        },
+        "initialization": {
+          "seconds": 0.03507290000197827,
+          "count": 17,
+          "max_seconds": 0.01638680000178283,
+          "average_seconds": 0.002063111764822251
+        },
+        "jpeg_encode": {
+          "seconds": 0.025572999995347345,
+          "count": 5,
+          "max_seconds": 0.016860899999301182,
+          "average_seconds": 0.005114599999069469
+        },
+        "render": {
+          "seconds": 0.46706719999201596,
+          "count": 22,
+          "max_seconds": 0.10576669999863952,
+          "average_seconds": 0.02123032727236436
+        },
+        "simulation": {
+          "seconds": 1.4360242999900947,
+          "count": 164,
+          "max_seconds": 0.11991310000303201,
+          "average_seconds": 0.00875624573164692
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\galaxy_collision_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "euler",
+      "status": "complete",
+      "wall_seconds": 1.6427103000023635,
+      "run_elapsed_seconds": 1.2268493175506592,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004118299999390729,
+          "count": 5,
+          "max_seconds": 0.0008538999973097816,
+          "average_seconds": 0.0008236599998781458
+        },
+        "initialization": {
+          "seconds": 0.029655199996341253,
+          "count": 17,
+          "max_seconds": 0.017496299999038456,
+          "average_seconds": 0.0017444235291965444
+        },
+        "jpeg_encode": {
+          "seconds": 0.022770800005673664,
+          "count": 5,
+          "max_seconds": 0.015289499999198597,
+          "average_seconds": 0.004554160001134733
+        },
+        "render": {
+          "seconds": 0.4690852999847266,
+          "count": 22,
+          "max_seconds": 0.10414900000250782,
+          "average_seconds": 0.021322059090214843
+        },
+        "simulation": {
+          "seconds": 0.1201524000025529,
+          "count": 164,
+          "max_seconds": 0.0030595999996876344,
+          "average_seconds": 0.00073263658538142
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\galaxy_collision_euler_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "euler",
+      "status": "complete",
+      "wall_seconds": 2.446914200001629,
+      "run_elapsed_seconds": 2.0077733993530273,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.00417070000548847,
+          "count": 5,
+          "max_seconds": 0.0008835000007820781,
+          "average_seconds": 0.000834140001097694
+        },
+        "initialization": {
+          "seconds": 0.035502099999575876,
+          "count": 17,
+          "max_seconds": 0.01636510000025737,
+          "average_seconds": 0.002088358823504463
+        },
+        "jpeg_encode": {
+          "seconds": 0.022665900003630668,
+          "count": 5,
+          "max_seconds": 0.015123699999094242,
+          "average_seconds": 0.004533180000726134
+        },
+        "render": {
+          "seconds": 0.4522640999930445,
+          "count": 22,
+          "max_seconds": 0.10180169999875943,
+          "average_seconds": 0.020557459090592933
+        },
+        "simulation": {
+          "seconds": 0.8140745000055176,
+          "count": 164,
+          "max_seconds": 0.11505899999974645,
+          "average_seconds": 0.004963868902472668
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\galaxy_collision_euler_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "euler",
+      "status": "complete",
+      "wall_seconds": 2.4352785000010044,
+      "run_elapsed_seconds": 1.9862308502197266,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0025687000015750527,
+          "count": 5,
+          "max_seconds": 0.0005462999979499727,
+          "average_seconds": 0.0005137400003150105
+        },
+        "frame_write": {
+          "seconds": 0.004442700006620726,
+          "count": 5,
+          "max_seconds": 0.001031600000715116,
+          "average_seconds": 0.0008885400013241452
+        },
+        "initialization": {
+          "seconds": 0.03500300000087009,
+          "count": 17,
+          "max_seconds": 0.016100200002256315,
+          "average_seconds": 0.0020590000000511818
+        },
+        "jpeg_encode": {
+          "seconds": 0.024144999999407446,
+          "count": 5,
+          "max_seconds": 0.01658580000002985,
+          "average_seconds": 0.004828999999881489
+        },
+        "render": {
+          "seconds": 0.45833679999486776,
+          "count": 22,
+          "max_seconds": 0.10424009999769623,
+          "average_seconds": 0.020833490908857624
+        },
+        "simulation": {
+          "seconds": 0.8177666000010504,
+          "count": 164,
+          "max_seconds": 0.11658270000043558,
+          "average_seconds": 0.004986381707323478
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\galaxy_collision_euler_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "reaction_diffusion",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.622570600000472,
+      "run_elapsed_seconds": 1.2060210704803467,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.0037954999970679637,
+          "count": 5,
+          "max_seconds": 0.000807399999757763,
+          "average_seconds": 0.0007590999994135927
+        },
+        "initialization": {
+          "seconds": 0.017312699998001335,
+          "count": 10,
+          "max_seconds": 0.015281799998774659,
+          "average_seconds": 0.0017312699998001334
+        },
+        "jpeg_encode": {
+          "seconds": 0.02186230000006617,
+          "count": 5,
+          "max_seconds": 0.015424900000652997,
+          "average_seconds": 0.004372460000013234
+        },
+        "simulation": {
+          "seconds": 0.6311677000048803,
+          "count": 13,
+          "max_seconds": 0.05194219999975758,
+          "average_seconds": 0.04855136153883695
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\reaction_diffusion_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "reaction_diffusion",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 9.311448700002074,
+      "run_elapsed_seconds": 8.851468801498413,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003993199996330077,
+          "count": 5,
+          "max_seconds": 0.0008965999986685347,
+          "average_seconds": 0.0007986399992660154
+        },
+        "initialization": {
+          "seconds": 0.07826819999172585,
+          "count": 10,
+          "max_seconds": 0.06965179999679094,
+          "average_seconds": 0.007826819999172585
+        },
+        "jpeg_encode": {
+          "seconds": 0.022393799998098984,
+          "count": 5,
+          "max_seconds": 0.015452699997695163,
+          "average_seconds": 0.004478759999619797
+        },
+        "simulation": {
+          "seconds": 8.100265900000522,
+          "count": 13,
+          "max_seconds": 0.9407802000023366,
+          "average_seconds": 0.6230973769231171
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\reaction_diffusion_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "reaction_diffusion",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 8.990234099997906,
+      "run_elapsed_seconds": 8.523618221282959,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0027881999958481174,
+          "count": 5,
+          "max_seconds": 0.0006094999989727512,
+          "average_seconds": 0.0005576399991696235
+        },
+        "frame_write": {
+          "seconds": 0.003773099997488316,
+          "count": 5,
+          "max_seconds": 0.0008492999986629002,
+          "average_seconds": 0.0007546199994976632
+        },
+        "initialization": {
+          "seconds": 0.06353440000020782,
+          "count": 10,
+          "max_seconds": 0.054531100002350286,
+          "average_seconds": 0.006353440000020782
+        },
+        "jpeg_encode": {
+          "seconds": 0.023938199996337062,
+          "count": 5,
+          "max_seconds": 0.01765769999838085,
+          "average_seconds": 0.0047876399992674125
+        },
+        "simulation": {
+          "seconds": 7.807242400005634,
+          "count": 13,
+          "max_seconds": 0.8133335999991687,
+          "average_seconds": 0.6005571076927411
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\reaction_diffusion_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "crystal",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 5.791353299999173,
+      "run_elapsed_seconds": 5.401900768280029,
+      "timings": {
+        "deep_zoom": {
+          "seconds": 1.5020610999999917,
+          "count": 1,
+          "max_seconds": 1.5020610999999917,
+          "average_seconds": 1.5020610999999917
+        },
+        "ensemble": {
+          "seconds": 2.4119571000010183,
+          "count": 1,
+          "max_seconds": 2.4119571000010183,
+          "average_seconds": 2.4119571000010183
+        },
+        "frame_write": {
+          "seconds": 0.0043460999986564275,
+          "count": 5,
+          "max_seconds": 0.0010533000022405759,
+          "average_seconds": 0.0008692199997312855
+        },
+        "initialization": {
+          "seconds": 0.9047645999999077,
+          "count": 1,
+          "max_seconds": 0.9047645999999077,
+          "average_seconds": 0.9047645999999077
+        },
+        "jpeg_encode": {
+          "seconds": 0.02198050000151852,
+          "count": 5,
+          "max_seconds": 0.014117200000328012,
+          "average_seconds": 0.004396100000303704
+        },
+        "render": {
+          "seconds": 0.5246622000013303,
+          "count": 4,
+          "max_seconds": 0.1669475999988208,
+          "average_seconds": 0.1311655500003326
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\crystal_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "crystal",
+      "backend_requested": "gpu",
+      "backend": null,
+      "method": "default",
+      "status": "unsupported",
+      "wall_seconds": null,
+      "run_elapsed_seconds": null,
+      "timings": {},
+      "run_dir": null,
+      "returncode": null,
+      "error": "supported backends: cpu"
+    },
+    {
+      "demo": "crystal",
+      "backend_requested": "hybrid",
+      "backend": null,
+      "method": "default",
+      "status": "unsupported",
+      "wall_seconds": null,
+      "run_elapsed_seconds": null,
+      "timings": {},
+      "run_dir": null,
+      "returncode": null,
+      "error": "supported backends: cpu"
+    },
+    {
+      "demo": "neural_wall",
+      "backend_requested": "cpu",
+      "backend": "torch\u00b7cpu",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.723212400000193,
+      "run_elapsed_seconds": 2.9382879734039307,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004710599998361431,
+          "count": 5,
+          "max_seconds": 0.0010583999974187464,
+          "average_seconds": 0.0009421199996722862
+        },
+        "jpeg_encode": {
+          "seconds": 0.02801250000266009,
+          "count": 5,
+          "max_seconds": 0.01937980000002426,
+          "average_seconds": 0.005602500000532018
+        },
+        "render": {
+          "seconds": 0.19513649999862537,
+          "count": 5,
+          "max_seconds": 0.041640700001153164,
+          "average_seconds": 0.039027299999725075
+        },
+        "simulation": {
+          "seconds": 0.6502099000026647,
+          "count": 5,
+          "max_seconds": 0.16182900000057998,
+          "average_seconds": 0.13004198000053294
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\neural_wall_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "neural_wall",
+      "backend_requested": "gpu",
+      "backend": "torch\u00b7cuda",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 4.10654980000254,
+      "run_elapsed_seconds": 3.3579652309417725,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004234399999404559,
+          "count": 5,
+          "max_seconds": 0.0009682999989308883,
+          "average_seconds": 0.0008468799998809118
+        },
+        "jpeg_encode": {
+          "seconds": 0.023405100004310952,
+          "count": 5,
+          "max_seconds": 0.01607740000326885,
+          "average_seconds": 0.004681020000862191
+        },
+        "render": {
+          "seconds": 0.1536954999974114,
+          "count": 5,
+          "max_seconds": 0.0361187999988033,
+          "average_seconds": 0.030739099999482277
+        },
+        "simulation": {
+          "seconds": 0.6733588999995845,
+          "count": 5,
+          "max_seconds": 0.1685321999975713,
+          "average_seconds": 0.13467177999991692
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\neural_wall_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "neural_wall",
+      "backend_requested": "hybrid",
+      "backend": "torch\u00b7cuda",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.5829502000015054,
+      "run_elapsed_seconds": 2.8516557216644287,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0026166000061493833,
+          "count": 5,
+          "max_seconds": 0.0005722000023524743,
+          "average_seconds": 0.0005233200012298766
+        },
+        "frame_write": {
+          "seconds": 0.0038977999975031707,
+          "count": 5,
+          "max_seconds": 0.000844000001961831,
+          "average_seconds": 0.0007795599995006341
+        },
+        "jpeg_encode": {
+          "seconds": 0.025011600002471823,
+          "count": 5,
+          "max_seconds": 0.017220600002474384,
+          "average_seconds": 0.005002320000494364
+        },
+        "render": {
+          "seconds": 0.15208139999595005,
+          "count": 5,
+          "max_seconds": 0.033632299997407245,
+          "average_seconds": 0.03041627999919001
+        },
+        "simulation": {
+          "seconds": 0.6416301000026579,
+          "count": 5,
+          "max_seconds": 0.14548239999930956,
+          "average_seconds": 0.12832602000053156
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\neural_wall_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "fusion_plasma",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.5336513000002014,
+      "run_elapsed_seconds": 1.1134843826293945,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.0045376999987638555,
+          "count": 5,
+          "max_seconds": 0.001076100001228042,
+          "average_seconds": 0.0009075399997527711
+        },
+        "initialization": {
+          "seconds": 0.018372599995927885,
+          "count": 10,
+          "max_seconds": 0.01591019999978016,
+          "average_seconds": 0.0018372599995927885
+        },
+        "jpeg_encode": {
+          "seconds": 0.02587159999893629,
+          "count": 5,
+          "max_seconds": 0.01621280000108527,
+          "average_seconds": 0.005174319999787258
+        },
+        "render": {
+          "seconds": 0.7532089999986056,
+          "count": 4,
+          "max_seconds": 0.4881182999997691,
+          "average_seconds": 0.1883022499996514
+        },
+        "simulation": {
+          "seconds": 0.13044880000597914,
+          "count": 13,
+          "max_seconds": 0.011940200001845369,
+          "average_seconds": 0.01003452307738301
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\fusion_plasma_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "fusion_plasma",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.989116100001411,
+      "run_elapsed_seconds": 3.538144588470459,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004471500000363449,
+          "count": 5,
+          "max_seconds": 0.0010360999986005481,
+          "average_seconds": 0.0008943000000726897
+        },
+        "initialization": {
+          "seconds": 0.01775120000456809,
+          "count": 10,
+          "max_seconds": 0.013820399999531219,
+          "average_seconds": 0.0017751200004568091
+        },
+        "jpeg_encode": {
+          "seconds": 0.02871199999572127,
+          "count": 5,
+          "max_seconds": 0.018647900000360096,
+          "average_seconds": 0.005742399999144254
+        },
+        "render": {
+          "seconds": 0.38982779999787454,
+          "count": 4,
+          "max_seconds": 0.1099244999968505,
+          "average_seconds": 0.09745694999946863
+        },
+        "simulation": {
+          "seconds": 2.403766600004019,
+          "count": 13,
+          "max_seconds": 0.22857749999820953,
+          "average_seconds": 0.18490512307723223
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\fusion_plasma_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "fusion_plasma",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.9960329000023194,
+      "run_elapsed_seconds": 3.5394036769866943,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0032124000063049607,
+          "count": 5,
+          "max_seconds": 0.0006969999994907994,
+          "average_seconds": 0.0006424800012609921
+        },
+        "frame_write": {
+          "seconds": 0.004266799998731585,
+          "count": 5,
+          "max_seconds": 0.0009376999987580348,
+          "average_seconds": 0.000853359999746317
+        },
+        "initialization": {
+          "seconds": 0.01787300000069081,
+          "count": 10,
+          "max_seconds": 0.01354209999772138,
+          "average_seconds": 0.001787300000069081
+        },
+        "jpeg_encode": {
+          "seconds": 0.026697699999203905,
+          "count": 5,
+          "max_seconds": 0.017595099998288788,
+          "average_seconds": 0.005339539999840781
+        },
+        "render": {
+          "seconds": 0.35681190000104834,
+          "count": 4,
+          "max_seconds": 0.09004139999888139,
+          "average_seconds": 0.08920297500026209
+        },
+        "simulation": {
+          "seconds": 2.4885969999922963,
+          "count": 13,
+          "max_seconds": 0.30140169999867794,
+          "average_seconds": 0.19143053846094588
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\fusion_plasma_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "weather_ensemble",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.7611724000016693,
+      "run_elapsed_seconds": 1.3088021278381348,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004470100000617094,
+          "count": 5,
+          "max_seconds": 0.001042699997924501,
+          "average_seconds": 0.0008940200001234189
+        },
+        "initialization": {
+          "seconds": 0.022033300003386103,
+          "count": 10,
+          "max_seconds": 0.017332600000372622,
+          "average_seconds": 0.00220333000033861
+        },
+        "jpeg_encode": {
+          "seconds": 0.0252595999991172,
+          "count": 5,
+          "max_seconds": 0.017046199998731026,
+          "average_seconds": 0.0050519199998234395
+        },
+        "render": {
+          "seconds": 0.8169835000044259,
+          "count": 4,
+          "max_seconds": 0.5375502000024426,
+          "average_seconds": 0.20424587500110647
+        },
+        "simulation": {
+          "seconds": 0.3420343999932811,
+          "count": 13,
+          "max_seconds": 0.03326609999930952,
+          "average_seconds": 0.026310338461021623
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\weather_ensemble_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "weather_ensemble",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 5.823065699998551,
+      "run_elapsed_seconds": 5.36333966255188,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003971900005126372,
+          "count": 5,
+          "max_seconds": 0.0009260000006179325,
+          "average_seconds": 0.0007943800010252744
+        },
+        "initialization": {
+          "seconds": 0.021947600005660206,
+          "count": 10,
+          "max_seconds": 0.014627600001404062,
+          "average_seconds": 0.0021947600005660208
+        },
+        "jpeg_encode": {
+          "seconds": 0.02278870000009192,
+          "count": 5,
+          "max_seconds": 0.015416700000059791,
+          "average_seconds": 0.004557740000018384
+        },
+        "render": {
+          "seconds": 0.34346990000267397,
+          "count": 4,
+          "max_seconds": 0.08753510000315146,
+          "average_seconds": 0.08586747500066849
+        },
+        "simulation": {
+          "seconds": 4.347818600006576,
+          "count": 13,
+          "max_seconds": 0.45950810000067577,
+          "average_seconds": 0.33444758461589047
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\weather_ensemble_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "weather_ensemble",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 5.314181100002315,
+      "run_elapsed_seconds": 4.811814069747925,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0029168000037316233,
+          "count": 5,
+          "max_seconds": 0.000626200002443511,
+          "average_seconds": 0.0005833600007463247
+        },
+        "frame_write": {
+          "seconds": 0.004138400003284914,
+          "count": 5,
+          "max_seconds": 0.0008821999981591944,
+          "average_seconds": 0.0008276800006569828
+        },
+        "initialization": {
+          "seconds": 0.02078270000492921,
+          "count": 10,
+          "max_seconds": 0.01404720000209636,
+          "average_seconds": 0.002078270000492921
+        },
+        "jpeg_encode": {
+          "seconds": 0.02556600000389153,
+          "count": 5,
+          "max_seconds": 0.01775679999991553,
+          "average_seconds": 0.005113200000778306
+        },
+        "render": {
+          "seconds": 0.3524661000010383,
+          "count": 4,
+          "max_seconds": 0.09035570000196458,
+          "average_seconds": 0.08811652500025957
+        },
+        "simulation": {
+          "seconds": 3.8330069999938132,
+          "count": 13,
+          "max_seconds": 0.35032630000205245,
+          "average_seconds": 0.2948466923072164
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\weather_ensemble_default_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "molecular_dynamics",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 1.275390899998456,
+      "run_elapsed_seconds": 0.8625202178955078,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003650200007541571,
+          "count": 5,
+          "max_seconds": 0.0007861000012781005,
+          "average_seconds": 0.0007300400015083141
+        },
+        "initialization": {
+          "seconds": 0.016231699995842064,
+          "count": 10,
+          "max_seconds": 0.0151726999974926,
+          "average_seconds": 0.0016231699995842065
+        },
+        "jpeg_encode": {
+          "seconds": 0.02248680000047898,
+          "count": 5,
+          "max_seconds": 0.015625899999577086,
+          "average_seconds": 0.0044973600000957955
+        },
+        "render": {
+          "seconds": 0.6094148000011046,
+          "count": 4,
+          "max_seconds": 0.4484828999993624,
+          "average_seconds": 0.15235370000027615
+        },
+        "simulation": {
+          "seconds": 0.12685609999971348,
+          "count": 13,
+          "max_seconds": 0.010970600000291597,
+          "average_seconds": 0.0097581615384395
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\molecular_dynamics_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "molecular_dynamics",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.185653699998511,
+      "run_elapsed_seconds": 2.743936061859131,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.003928599995560944,
+          "count": 5,
+          "max_seconds": 0.0008344000016222708,
+          "average_seconds": 0.0007857199991121889
+        },
+        "initialization": {
+          "seconds": 0.01752380000471021,
+          "count": 10,
+          "max_seconds": 0.014161600000079488,
+          "average_seconds": 0.001752380000471021
+        },
+        "jpeg_encode": {
+          "seconds": 0.022357199995894916,
+          "count": 5,
+          "max_seconds": 0.015602699997543823,
+          "average_seconds": 0.004471439999178983
+        },
+        "render": {
+          "seconds": 0.21482209999521729,
+          "count": 4,
+          "max_seconds": 0.05478899999798159,
+          "average_seconds": 0.05370552499880432
+        },
+        "simulation": {
+          "seconds": 1.9008522000003722,
+          "count": 13,
+          "max_seconds": 0.2151613999994879,
+          "average_seconds": 0.14621940000002864
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\molecular_dynamics_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "molecular_dynamics",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 3.2728377000021283,
+      "run_elapsed_seconds": 2.8222548961639404,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0031175999938568566,
+          "count": 5,
+          "max_seconds": 0.0007886999992479105,
+          "average_seconds": 0.0006235199987713713
+        },
+        "frame_write": {
+          "seconds": 0.004320500003814232,
+          "count": 5,
+          "max_seconds": 0.0009581000012985896,
+          "average_seconds": 0.0008641000007628463
+        },
+        "initialization": {
+          "seconds": 0.016350100002455292,
+          "count": 10,
+          "max_seconds": 0.012848099999246188,
+          "average_seconds": 0.0016350100002455292
+        },
+        "jpeg_encode": {
+          "seconds": 0.024879800002963748,
+          "count": 5,
+          "max_seconds": 0.01766660000066622,
+          "average_seconds": 0.0049759600005927496
+        },
+        "render": {
+          "seconds": 0.22530640000331914,
+          "count": 4,
+          "max_seconds": 0.05804659999921569,
+          "average_seconds": 0.056326600000829785
+        },
+        "simulation": {
+          "seconds": 1.9901267999957781,
+          "count": 13,
+          "max_seconds": 0.21109789999900386,
+          "average_seconds": 0.15308667692275216
+        }
+      },
+      "run_dir": "benchmarks\\artifacts\\20260831_195150\\molecular_dynamics_default_hybrid",
+      "returncode": 0,
+      "error": null
+    }
+  ],
+  "notes": [
+    "The benchmark profile is a fixed workstation-scale workload; it is not a Leonardo-node performance claim.",
+    "GPU stage boundaries synchronize CUDA for honest elapsed times.",
+    "Hybrid JPEG and write stages overlap solver work, so stage totals are not additive.",
+    "Unsupported means the demo is intentionally scheduled on Leonardo's CPU partition rather than pretending to use a GPU."
+  ]
+}

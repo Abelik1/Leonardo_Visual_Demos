@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "created": 1788281976.5177422,
+  "created_iso": "2026-09-01T17:59:36+0100",
+  "profile": "benchmark",
+  "frames": 4,
+  "python": "E:\\Documents\\Github\\EuroHPC\\Leonardo_Visual_Demos\\.venv\\Scripts\\python.exe",
+  "environment": {
+    "hostname": "AlexMainDesktop",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+    "logical_cpus": 16,
+    "backends": {
+      "cpu": {
+        "available": true,
+        "label": "CPU (NumPy)",
+        "detail": "NumPy 2.5.2"
+      },
+      "gpu": {
+        "available": true,
+        "label": "GPU (CuPy)",
+        "detail": "1x NVIDIA GeForce RTX 3060 Ti"
+      },
+      "torch": {
+        "available": true,
+        "label": "PyTorch CUDA",
+        "detail": "NVIDIA GeForce RTX 3060 Ti"
+      },
+      "hybrid": {
+        "available": true,
+        "label": "GPU + CPU pipeline",
+        "detail": "CUDA solver with CPU frame encoding and disk I/O in parallel"
+      }
+    },
+    "slurm_job_id": null,
+    "slurm_partition": null
+  },
+  "results": [
+    {
+      "demo": "plasma_guardian",
+      "backend_requested": "cpu",
+      "backend": "torch\u00b7cpu",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 5.693801699999312,
+      "run_elapsed_seconds": 4.512848854064941,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.009604700000636512,
+          "count": 8,
+          "max_seconds": 0.0018278000025020447,
+          "average_seconds": 0.001200587500079564
+        },
+        "jpeg_encode": {
+          "seconds": 0.03170470000623027,
+          "count": 8,
+          "max_seconds": 0.0198393999999098,
+          "average_seconds": 0.003963087500778784
+        },
+        "render": {
+          "seconds": 0.2511709000027622,
+          "count": 4,
+          "max_seconds": 0.06513550000090618,
+          "average_seconds": 0.06279272500069055
+        },
+        "simulation": {
+          "seconds": 0.25764170000184095,
+          "count": 4,
+          "max_seconds": 0.07506070000090403,
+          "average_seconds": 0.06441042500046024
+        }
+      },
+      "run_dir": "benchmarks\\plasma-guardian\\artifacts\\20260901_175917\\plasma_guardian_default_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "plasma_guardian",
+      "backend_requested": "gpu",
+      "backend": "torch\u00b7cuda",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 6.88611960000344,
+      "run_elapsed_seconds": 5.603748798370361,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.009698099995148368,
+          "count": 8,
+          "max_seconds": 0.002074299998639617,
+          "average_seconds": 0.001212262499393546
+        },
+        "jpeg_encode": {
+          "seconds": 0.028449099998397287,
+          "count": 8,
+          "max_seconds": 0.018952700000227196,
+          "average_seconds": 0.003556137499799661
+        },
+        "render": {
+          "seconds": 0.2229479999950854,
+          "count": 4,
+          "max_seconds": 0.059440100001665996,
+          "average_seconds": 0.05573699999877135
+        },
+        "simulation": {
+          "seconds": 0.9884104000011575,
+          "count": 4,
+          "max_seconds": 0.42865359999996144,
+          "average_seconds": 0.24710260000028939
+        }
+      },
+      "run_dir": "benchmarks\\plasma-guardian\\artifacts\\20260901_175917\\plasma_guardian_default_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "plasma_guardian",
+      "backend_requested": "hybrid",
+      "backend": "torch\u00b7cuda",
+      "method": "default",
+      "status": "complete",
+      "wall_seconds": 6.758157200001733,
+      "run_elapsed_seconds": 5.543867588043213,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0036340000006021,
+          "count": 8,
+          "max_seconds": 0.0007492000004276633,
+          "average_seconds": 0.0004542500000752625
+        },
+        "frame_write": {
+          "seconds": 0.014718600006744964,
+          "count": 8,
+          "max_seconds": 0.005461299999296898,
+          "average_seconds": 0.0018398250008431205
+        },
+        "jpeg_encode": {
+          "seconds": 0.049821199998405064,
+          "count": 8,
+          "max_seconds": 0.039925299999595154,
+          "average_seconds": 0.006227649999800633
+        },
+        "render": {
+          "seconds": 0.22431659999710973,
+          "count": 4,
+          "max_seconds": 0.061426899999787565,
+          "average_seconds": 0.05607914999927743
+        },
+        "simulation": {
+          "seconds": 0.8986207999987528,
+          "count": 4,
+          "max_seconds": 0.39923060000000987,
+          "average_seconds": 0.2246551999996882
+        }
+      },
+      "run_dir": "benchmarks\\plasma-guardian\\artifacts\\20260901_175917\\plasma_guardian_default_hybrid",
+      "returncode": 0,
+      "error": null
+    }
+  ],
+  "notes": [
+    "The benchmark profile is a fixed workstation-scale workload; it is not a Leonardo-node performance claim.",
+    "GPU stage boundaries synchronize CUDA for honest elapsed times.",
+    "Hybrid JPEG and write stages overlap solver work, so stage totals are not additive.",
+    "Unsupported means the demo is intentionally scheduled on Leonardo's CPU partition rather than pretending to use a GPU."
+  ]
+}

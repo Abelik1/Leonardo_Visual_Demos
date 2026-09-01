@@ -1,0 +1,598 @@
+{
+  "schema_version": 1,
+  "created": 1788271771.1202538,
+  "created_iso": "2026-09-01T15:09:31+0100",
+  "profile": "benchmark",
+  "frames": 4,
+  "python": ".\\.venv\\Scripts\\python.exe",
+  "environment": {
+    "hostname": "AlexMainDesktop",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+    "logical_cpus": 16,
+    "backends": {
+      "cpu": {
+        "available": true,
+        "label": "CPU (NumPy)",
+        "detail": "NumPy 2.5.2"
+      },
+      "gpu": {
+        "available": true,
+        "label": "GPU (CuPy)",
+        "detail": "1x NVIDIA GeForce RTX 3060 Ti"
+      },
+      "torch": {
+        "available": true,
+        "label": "PyTorch CUDA",
+        "detail": "NVIDIA GeForce RTX 3060 Ti"
+      },
+      "hybrid": {
+        "available": true,
+        "label": "GPU + CPU pipeline",
+        "detail": "CUDA solver with CPU frame encoding and disk I/O in parallel"
+      }
+    },
+    "slurm_job_id": null,
+    "slurm_partition": null
+  },
+  "results": [
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "leapfrog",
+      "status": "complete",
+      "wall_seconds": 1.7379269000011845,
+      "run_elapsed_seconds": 1.2857160568237305,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.0049919000011868775,
+          "count": 5,
+          "max_seconds": 0.0011282000014034566,
+          "average_seconds": 0.0009983800002373755
+        },
+        "initialization": {
+          "seconds": 0.03469170000971644,
+          "count": 17,
+          "max_seconds": 0.019319900002301438,
+          "average_seconds": 0.002040688235865673
+        },
+        "jpeg_encode": {
+          "seconds": 0.026070500003697816,
+          "count": 5,
+          "max_seconds": 0.016460499999084277,
+          "average_seconds": 0.005214100000739563
+        },
+        "render": {
+          "seconds": 0.4952365999852191,
+          "count": 20,
+          "max_seconds": 0.11148379999940516,
+          "average_seconds": 0.024761829999260954
+        },
+        "simulation": {
+          "seconds": 0.2517356000134896,
+          "count": 164,
+          "max_seconds": 0.005540900001506088,
+          "average_seconds": 0.001534973170813961
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_leapfrog_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "leapfrog",
+      "status": "complete",
+      "wall_seconds": 3.5790969999980007,
+      "run_elapsed_seconds": 3.0394301414489746,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.004854199993133079,
+          "count": 5,
+          "max_seconds": 0.0011435999986133538,
+          "average_seconds": 0.0009708399986266159
+        },
+        "initialization": {
+          "seconds": 0.04290899999978137,
+          "count": 17,
+          "max_seconds": 0.019592300002841512,
+          "average_seconds": 0.0025240588235165514
+        },
+        "jpeg_encode": {
+          "seconds": 0.02916600000753533,
+          "count": 5,
+          "max_seconds": 0.01909440000235918,
+          "average_seconds": 0.005833200001507066
+        },
+        "render": {
+          "seconds": 0.5398507999998401,
+          "count": 20,
+          "max_seconds": 0.12372540000069421,
+          "average_seconds": 0.026992539999992005
+        },
+        "simulation": {
+          "seconds": 1.780963100016379,
+          "count": 164,
+          "max_seconds": 0.13926269999865326,
+          "average_seconds": 0.010859531097660849
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_leapfrog_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "leapfrog",
+      "status": "complete",
+      "wall_seconds": 3.4970246000011684,
+      "run_elapsed_seconds": 2.9541499614715576,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.003554199996870011,
+          "count": 5,
+          "max_seconds": 0.0008938999999372754,
+          "average_seconds": 0.0007108399993740022
+        },
+        "frame_write": {
+          "seconds": 0.005510999999387423,
+          "count": 5,
+          "max_seconds": 0.0013676999988092575,
+          "average_seconds": 0.0011021999998774845
+        },
+        "initialization": {
+          "seconds": 0.039334400004008785,
+          "count": 17,
+          "max_seconds": 0.017535400002088863,
+          "average_seconds": 0.0023137882355299287
+        },
+        "jpeg_encode": {
+          "seconds": 0.028944900004717056,
+          "count": 5,
+          "max_seconds": 0.019012700002349447,
+          "average_seconds": 0.005788980000943411
+        },
+        "render": {
+          "seconds": 0.535147099995811,
+          "count": 20,
+          "max_seconds": 0.12562590000015916,
+          "average_seconds": 0.02675735499979055
+        },
+        "simulation": {
+          "seconds": 1.7306665999967663,
+          "count": 164,
+          "max_seconds": 0.13468429999920772,
+          "average_seconds": 0.010552845121931501
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_leapfrog_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "symplectic_euler",
+      "status": "complete",
+      "wall_seconds": 1.770145299997239,
+      "run_elapsed_seconds": 1.2599923610687256,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.005179100000532344,
+          "count": 5,
+          "max_seconds": 0.001196400000480935,
+          "average_seconds": 0.0010358200001064689
+        },
+        "initialization": {
+          "seconds": 0.03646820000358275,
+          "count": 17,
+          "max_seconds": 0.02182390000234591,
+          "average_seconds": 0.002145188235504868
+        },
+        "jpeg_encode": {
+          "seconds": 0.025778499999432825,
+          "count": 5,
+          "max_seconds": 0.01780280000093626,
+          "average_seconds": 0.005155699999886565
+        },
+        "render": {
+          "seconds": 0.5360153999972681,
+          "count": 20,
+          "max_seconds": 0.1212734000000637,
+          "average_seconds": 0.026800769999863406
+        },
+        "simulation": {
+          "seconds": 0.12896640000326443,
+          "count": 164,
+          "max_seconds": 0.00329030000284547,
+          "average_seconds": 0.0007863804878247831
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_symplectic_euler_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "symplectic_euler",
+      "status": "complete",
+      "wall_seconds": 2.787947799999529,
+      "run_elapsed_seconds": 2.227304697036743,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.005318999999872176,
+          "count": 5,
+          "max_seconds": 0.001434099998732563,
+          "average_seconds": 0.0010637999999744351
+        },
+        "initialization": {
+          "seconds": 0.042881999994278885,
+          "count": 17,
+          "max_seconds": 0.019550200002413476,
+          "average_seconds": 0.002522470587898758
+        },
+        "jpeg_encode": {
+          "seconds": 0.025746799994522007,
+          "count": 5,
+          "max_seconds": 0.017017499998473795,
+          "average_seconds": 0.005149359998904401
+        },
+        "render": {
+          "seconds": 0.5078326999973797,
+          "count": 20,
+          "max_seconds": 0.11577070000203094,
+          "average_seconds": 0.025391634999868982
+        },
+        "simulation": {
+          "seconds": 0.9764115999969363,
+          "count": 164,
+          "max_seconds": 0.1343522999995912,
+          "average_seconds": 0.005953729268274002
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_symplectic_euler_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "symplectic_euler",
+      "status": "complete",
+      "wall_seconds": 2.8565347000003385,
+      "run_elapsed_seconds": 2.3327393531799316,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.0036215000036463607,
+          "count": 5,
+          "max_seconds": 0.001091999998607207,
+          "average_seconds": 0.0007243000007292721
+        },
+        "frame_write": {
+          "seconds": 0.006092700001318008,
+          "count": 5,
+          "max_seconds": 0.0016491999995196238,
+          "average_seconds": 0.0012185400002636016
+        },
+        "initialization": {
+          "seconds": 0.042349100000137696,
+          "count": 17,
+          "max_seconds": 0.017776799999410287,
+          "average_seconds": 0.0024911235294198643
+        },
+        "jpeg_encode": {
+          "seconds": 0.030921600005967775,
+          "count": 5,
+          "max_seconds": 0.021508100002392894,
+          "average_seconds": 0.006184320001193555
+        },
+        "render": {
+          "seconds": 0.5630623000142805,
+          "count": 20,
+          "max_seconds": 0.12912990000040736,
+          "average_seconds": 0.028153115000714025
+        },
+        "simulation": {
+          "seconds": 1.0747815999966406,
+          "count": 164,
+          "max_seconds": 0.12865279999823542,
+          "average_seconds": 0.006553546341442931
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_symplectic_euler_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "murb_kinematic",
+      "status": "complete",
+      "wall_seconds": 1.7495421999992686,
+      "run_elapsed_seconds": 1.254368543624878,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.005314399997587316,
+          "count": 5,
+          "max_seconds": 0.0012177999997220468,
+          "average_seconds": 0.0010628799995174632
+        },
+        "initialization": {
+          "seconds": 0.03469550000590971,
+          "count": 17,
+          "max_seconds": 0.02005559999815887,
+          "average_seconds": 0.002040911765053512
+        },
+        "jpeg_encode": {
+          "seconds": 0.02497090000542812,
+          "count": 5,
+          "max_seconds": 0.01690230000167503,
+          "average_seconds": 0.004994180001085624
+        },
+        "render": {
+          "seconds": 0.5161749000108102,
+          "count": 20,
+          "max_seconds": 0.11624110000047949,
+          "average_seconds": 0.025808745000540513
+        },
+        "simulation": {
+          "seconds": 0.1323489000169502,
+          "count": 164,
+          "max_seconds": 0.0037191999981587287,
+          "average_seconds": 0.000807005487908233
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_murb_kinematic_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "murb_kinematic",
+      "status": "complete",
+      "wall_seconds": 2.80788400000165,
+      "run_elapsed_seconds": 2.2969915866851807,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.005137099997227779,
+          "count": 5,
+          "max_seconds": 0.0011354999987815972,
+          "average_seconds": 0.0010274199994455557
+        },
+        "initialization": {
+          "seconds": 0.04011530000207131,
+          "count": 17,
+          "max_seconds": 0.01824789999955101,
+          "average_seconds": 0.0023597235295336064
+        },
+        "jpeg_encode": {
+          "seconds": 0.02607029999853694,
+          "count": 5,
+          "max_seconds": 0.017728700000589015,
+          "average_seconds": 0.005214059999707388
+        },
+        "render": {
+          "seconds": 0.5422517000042717,
+          "count": 20,
+          "max_seconds": 0.1222892999976466,
+          "average_seconds": 0.027112585000213584
+        },
+        "simulation": {
+          "seconds": 1.0570928000270214,
+          "count": 164,
+          "max_seconds": 0.13301659999706317,
+          "average_seconds": 0.006445687805042814
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_murb_kinematic_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "murb_kinematic",
+      "status": "complete",
+      "wall_seconds": 2.9324823999995715,
+      "run_elapsed_seconds": 2.416379928588867,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.003492199997708667,
+          "count": 5,
+          "max_seconds": 0.0008517999995092396,
+          "average_seconds": 0.0006984399995417334
+        },
+        "frame_write": {
+          "seconds": 0.004611100001056911,
+          "count": 5,
+          "max_seconds": 0.001102900001569651,
+          "average_seconds": 0.0009222200002113823
+        },
+        "initialization": {
+          "seconds": 0.04224400001112372,
+          "count": 17,
+          "max_seconds": 0.01795010000205366,
+          "average_seconds": 0.0024849411771249246
+        },
+        "jpeg_encode": {
+          "seconds": 0.027431499998783693,
+          "count": 5,
+          "max_seconds": 0.018844199999875855,
+          "average_seconds": 0.005486299999756738
+        },
+        "render": {
+          "seconds": 0.5580082999986189,
+          "count": 20,
+          "max_seconds": 0.1288057999990997,
+          "average_seconds": 0.027900414999930945
+        },
+        "simulation": {
+          "seconds": 1.1850685000172234,
+          "count": 164,
+          "max_seconds": 0.13311479999902076,
+          "average_seconds": 0.007226027439129411
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_murb_kinematic_hybrid",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "cpu",
+      "backend": "numpy",
+      "method": "rk4",
+      "status": "complete",
+      "wall_seconds": 2.265032400002383,
+      "run_elapsed_seconds": 1.7607648372650146,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.0058203999942634255,
+          "count": 5,
+          "max_seconds": 0.0016125999973155558,
+          "average_seconds": 0.0011640799988526852
+        },
+        "initialization": {
+          "seconds": 0.03625290000854875,
+          "count": 17,
+          "max_seconds": 0.02015659999960917,
+          "average_seconds": 0.0021325235299146325
+        },
+        "jpeg_encode": {
+          "seconds": 0.030393099998036632,
+          "count": 5,
+          "max_seconds": 0.018360500002017943,
+          "average_seconds": 0.006078619999607326
+        },
+        "render": {
+          "seconds": 0.6069351000041934,
+          "count": 20,
+          "max_seconds": 0.1339810999998008,
+          "average_seconds": 0.03034675500020967
+        },
+        "simulation": {
+          "seconds": 0.5404438000077789,
+          "count": 164,
+          "max_seconds": 0.015312499999708962,
+          "average_seconds": 0.0032953890244376764
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_rk4_cpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "gpu",
+      "backend": "cupy",
+      "method": "rk4",
+      "status": "complete",
+      "wall_seconds": 6.8748421000018425,
+      "run_elapsed_seconds": 6.331252336502075,
+      "timings": {
+        "frame_write": {
+          "seconds": 0.005029600000852952,
+          "count": 5,
+          "max_seconds": 0.001201200000650715,
+          "average_seconds": 0.0010059200001705903
+        },
+        "initialization": {
+          "seconds": 0.046326699994097,
+          "count": 17,
+          "max_seconds": 0.021362399998906767,
+          "average_seconds": 0.0027250999996527646
+        },
+        "jpeg_encode": {
+          "seconds": 0.026999500005331356,
+          "count": 5,
+          "max_seconds": 0.017159300001367228,
+          "average_seconds": 0.005399900001066271
+        },
+        "render": {
+          "seconds": 0.6639988999995694,
+          "count": 20,
+          "max_seconds": 0.1439950999993016,
+          "average_seconds": 0.03319994499997847
+        },
+        "simulation": {
+          "seconds": 4.935024700029317,
+          "count": 164,
+          "max_seconds": 0.15413730000000214,
+          "average_seconds": 0.030091614024569002
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_rk4_gpu",
+      "returncode": 0,
+      "error": null
+    },
+    {
+      "demo": "galaxy_collision",
+      "backend_requested": "hybrid",
+      "backend": "cupy + CPU frame workers",
+      "method": "rk4",
+      "status": "complete",
+      "wall_seconds": 6.373798999997234,
+      "run_elapsed_seconds": 5.835434675216675,
+      "timings": {
+        "frame_copy": {
+          "seconds": 0.004658399997424567,
+          "count": 5,
+          "max_seconds": 0.0009651000000303611,
+          "average_seconds": 0.0009316799994849134
+        },
+        "frame_write": {
+          "seconds": 0.005848900000273716,
+          "count": 5,
+          "max_seconds": 0.00145160000101896,
+          "average_seconds": 0.0011697800000547431
+        },
+        "initialization": {
+          "seconds": 0.040837999986251816,
+          "count": 17,
+          "max_seconds": 0.018905199998698663,
+          "average_seconds": 0.0024022352933089305
+        },
+        "jpeg_encode": {
+          "seconds": 0.027957400001469068,
+          "count": 5,
+          "max_seconds": 0.01834199999939301,
+          "average_seconds": 0.005591480000293814
+        },
+        "render": {
+          "seconds": 0.637677499998972,
+          "count": 20,
+          "max_seconds": 0.1392822999987402,
+          "average_seconds": 0.0318838749999486
+        },
+        "simulation": {
+          "seconds": 4.500514499977726,
+          "count": 164,
+          "max_seconds": 0.15129789999991772,
+          "average_seconds": 0.027442161585230034
+        }
+      },
+      "run_dir": "benchmarks\\galaxy-solvers\\artifacts\\20260901_150851\\galaxy_collision_rk4_hybrid",
+      "returncode": 0,
+      "error": null
+    }
+  ],
+  "notes": [
+    "The benchmark profile is a fixed workstation-scale workload; it is not a Leonardo-node performance claim.",
+    "GPU stage boundaries synchronize CUDA for honest elapsed times.",
+    "Hybrid JPEG and write stages overlap solver work, so stage totals are not additive.",
+    "Unsupported means the demo is intentionally scheduled on Leonardo's CPU partition rather than pretending to use a GPU."
+  ]
+}

@@ -20,9 +20,11 @@ and the reported backend is true.
 
 On the Windows exhibition workstation the selector was initially unavailable
 despite an RTX 3060 Ti being present: Python had a CPU-only PyTorch build and
-no CuPy package. The verified project-local setup is now CUDA 13 (`torch
+no CuPy package. The verified project-local setup is CUDA 13 (`torch
 2.13.0+cu130` and `cupy-cuda13x 14.2.0`); the NVIDIA driver supplies the device
-and no system-wide CUDA toolkit is required. See `requirements-gpu.txt`.
+and no system-wide CUDA toolkit is required. It is isolated in
+`requirements-gpu-windows.txt`. Leonardo has a separate CUDA 12-compatible
+`requirements-gpu.txt`; workstation wheels must not be copied to the cluster.
 
 **Saved runs.** Every run has always persisted to `runs/<id>/`, but there was
 no way to reach one: `/api/runs` existed and nothing called it. There is now a
@@ -93,13 +95,15 @@ the side panel exposes the real winning weights and loss curve. The Windows
 CUDA path also imports PyTorch before CuPy for this demo; this avoids a
 first-call deadlock with their bundled CUDA runtimes.
 
-**black_hole.** The previous opening jumped straight from an unlensed sky to a
-flat image. It now starts with a fixed-camera exploded optical stack: foreground
-dust, distant source sheet, gravitational lens and observer image plane are
-separate; visible light packets curve around the lens; then the layers compact
-and dissolve into the real pixel-parallel lensing output. This is intentionally
-labelled as an explanatory layer view — the animated paths are not claimed to
-be individually integrated Kerr geodesics.
+**black_hole.** The main viewport now has two independently selectable modes.
+The default 3-D ray-space mode numerically advances photon paths past the lens,
+showing escaping and captured rays, animated light packets, source plane and
+observer in a fixed spatial view. The 2-D observer mode remains the real
+pixel-parallel lensing output. The old exploded-strip assembly is no longer the
+main animation. It has been replaced by optional HTML explanation/readout
+layers, so neither mode has presentation panels baked into its imagery. The
+3-D integrator is an honest weak-field exhibition model, not a claim of full
+Kerr-geodesic accuracy.
 
 **crystal.** Was a phase-field grid whose "zoom" could only enlarge pixels. Now
 a recursive geometric model with six habits (classic, fern, seaweed, star,
@@ -129,6 +133,13 @@ blue Milky Way, warm M31 and bright overlap colours. A curator can also install
 `data/m31_catalog_reduced.npz`; `tools/reduce_star_catalog.py` turns an
 offline, deprojected catalogue into mass-weighted spatial representatives so a
 catalogue-driven M31 start remains bounded and repeatable.
+
+The Leonardo pass added kick-drift-kick leapfrog integration, chunked NumPy
+updates bounded by `SLURM_CPUS_PER_TASK`, and a fully device-resident CuPy path.
+Rendering now transfers particle state from CUDA once per frame rather than
+once for the global view and again for each close-up. The transverse-velocity
+reveal was also rebuilt from consistent initial states; previously its centre
+velocities were sign-inverted and its tracers retained the old bulk motion.
 
 **cosmic_web.** Never produced a cosmic web at all — it collapsed the box into a
 single blob. Three separate causes: the Poisson source was raw particle counts

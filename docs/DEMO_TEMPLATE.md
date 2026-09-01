@@ -13,6 +13,8 @@ and a settings dict from the active profile, and it writes:
 runs/<run-id>/
   meta.json            status, params, backend, timing
   frames/frame_NNNN.jpg
+  frame_data/frame_NNNN.json  optional live readout values
+  modes/<name>/frame_NNNN.jpg optional alternative simulation views
   reveal.jpg
   zoom/                optional tile pyramid
 ```
@@ -25,8 +27,12 @@ off this contract alone.
 
 1. **Simulation state** — arrays, particles, fields. No PIL, no text, no I/O.
 2. **Headless renderer** — state to a frame. No solver calls.
-3. **Story overlay** — titles, counters, badges.
-4. **Viewer** — transitions, playback, zoom.
+3. **Frame data** — small JSON values, with no HTML or baked-in labels.
+4. **Viewer** — real HTML controls/overlays, transitions, playback and zoom.
+
+The numbered frame is the clean simulation viewport. Do not draw titles,
+legends, explanatory cards or control panels into it. Alternative scientific
+views belong in `modes/`; optional explanatory material belongs in the viewer.
 
 Never change a scientific state because a transition looks better. Change how
 it is rendered.

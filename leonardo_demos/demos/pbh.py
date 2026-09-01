@@ -6,6 +6,9 @@ from ..base import Demo
 from ..render import add_title, add_progress, save_frame, mosaic, font, palette
 
 class PBHDemo(Demo):
+    backend_kind="cpu"
+    supported_backends=("cpu",)
+    timing_methods={"profile":"simulation","spherical":"render"}
     id="pbh"; title="Primordial black-hole threshold"
     delta_c=0.49774
     def profile(self,r,delta,width,t):
@@ -44,21 +47,14 @@ class PBHDemo(Demo):
         for i in range(self.ctx.frames):
             t=(i+1)/self.ctx.frames
             rho,comp=self.profile(r,delta,width,t)
-            sphere=self.spherical(r,rho,620).resize((720,720),Image.Resampling.LANCZOS)
-            canvas=Image.new('RGB',(1280,720),(2,5,14)); canvas.paste(sphere,(0,0))
-            d=ImageDraw.Draw(canvas,'RGBA')
-            # scientific radial trace
-            x0,y0,x1,y1=760,195,1230,565; d.rounded_rectangle((735,160,1250,595),radius=18,fill=(6,10,24,225))
-            d.text((760,175),"Radial density contrast",font=font(18,True),fill='white')
-            logr=np.log10(np.maximum(rho,1e-4)); lo,hi=min(0,float(logr.min())),max(.2,float(logr.max())); pts=[]
-            for xx,v in zip(r,logr):
-                px=x0+(x1-x0)*xx/r[-1]; py=y1-(y1-y0)*(v-lo)/(hi-lo+1e-9); pts.append((px,py))
-            d.line(pts,fill=(102,231,255,235),width=3); d.line((x0,y1,x1,y1),fill=(255,255,255,60),width=1)
-            d.rounded_rectangle((760,505,975,552),radius=12,fill=(235,72,86,210) if regime=='COLLAPSE' else (50,175,210,210)); d.text((780,518),regime,font=font(17,True),fill='white')
+            sphere=self.spherical(r,rho,720)
+            canvas=Image.new('RGB',(1280,720),(2,5,14)); canvas.paste(sphere,(280,0))
             canvas=add_title(canvas,"The early Universe: will it collapse?",f"δ={delta:.5f} · reference threshold ≈ {self.delta_c:.5f} · reduced exhibition model",badge="LIVE MODEL")
             add_progress(canvas,t,"PERTURBATION","COLLAPSE / DISPERSION")
-            self.ctx.save_frame(canvas,self.ctx.frame_path(i)); self.ctx.write_status(i,regime)
-        ens=int(self.settings.get('ensemble',64)); side=max(4,int(math.sqrt(ens))); ims=[]
+            self.ctx.save_frame(canvas,self.ctx.frame_path(i)); self.ctx.write_status(i,regime,{
+                "regime":regime,"density contrast δ":f"{delta:.5f}","reference threshold":f"{self.delta_c:.5f}",
+                "profile width":f"{width:.2f}","central density":f"{rho[0]:.3f}","evolution":f"{100*t:.0f}%"})
+        ens=int(self.settings.get('ensemble',64)); side=max(2,int(math.ceil(math.sqrt(ens)))); ims=[]
         ds=np.linspace(self.delta_c-.025,self.delta_c+.025,side)
         ws=np.linspace(.65,1.35,side)
         for ww in ws:
@@ -68,5 +64,4 @@ class PBHDemo(Demo):
                 col=(245,90,85,220) if dd>self.delta_c else (65,190,235,220); dr.rectangle((0,137,150,150),fill=col)
                 ims.append(im)
         rev=mosaic(ims,side,title="Scientists do not run one universe")
-        d=ImageDraw.Draw(rev,'RGBA'); d.text((880,25),"blue: disperses   red: collapses",font=font(17,True),fill=(220,235,255))
         rp=self.ctx.run_dir/'reveal.jpg'; self.ctx.save_frame(rev,rp); self.ctx.finish(rp)

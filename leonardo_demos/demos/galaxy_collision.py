@@ -33,14 +33,30 @@ MW_M31=dict(
 
 
 class GalaxyCollisionDemo(Demo):
+    default_method="leapfrog"
+    methods=("leapfrog","symplectic_euler","murb_kinematic","rk4")
+    method_labels={
+        "leapfrog":"Leapfrog (recommended)",
+        "symplectic_euler":"Symplectic Euler",
+        "murb_kinematic":"MUrB constant-acceleration",
+        "rk4":"Runge–Kutta 4",
+    }
+    method_descriptions={
+        "leapfrog":"Second-order kick–drift–kick; symplectic and stable over orbital timescales.",
+        "symplectic_euler":"One force evaluation per step; fast and symplectic, but first-order accurate.",
+        "murb_kinematic":"The reference repository's standard x += v·dt + ½a·dt², v += a·dt update.",
+        "rk4":"Four force evaluations per step; locally fourth-order, but not symplectic.",
+    }
+    timing_methods={"setup":"initialization","step":"simulation","render":"render"}
     id="galaxy_collision"; title="Galaxy collision"
 
-    def setup(self,N,preset,impact,speed,tilt):
+    def setup(self,N,preset,impact,speed,tilt,transverse_velocity=None):
         """Return positions, velocities and the two galaxy centres."""
         if preset>=0.5:
             p=MW_M31
             m1,m2=p['m1'],p['m2']; sep=p['separation']
-            vr,vt=p['v_radial'],p['v_transverse']
+            vr=p['v_radial']
+            vt=p['v_transverse'] if transverse_velocity is None else float(transverse_velocity)
             r1,r2=p['r1'],p['r2']; label=p['label']; note=p['note']
         else:
             m1=1.5e12*max(.2,speed); m2=1.5e12*max(.2,2-speed)
@@ -146,17 +162,98 @@ class GalaxyCollisionDemo(Demo):
             a+=G*m*d/(rr[:,None]**1.5)
         return a
     def centre_accel(self,c1,c2,m1,m2,eps=EPS_GAL):
-        xp=self.ctx.xp; d=c2-c1; rr=float(xp.sum(d*d))+eps*eps
+        xp=self.ctx.xp; d=c2-c1; rr=xp.sum(d*d)+eps*eps
         a=G*d/(rr**1.5)
         return a*m2,-a*m1
+    def particle_accel(self,p,c1,c2,m1,m2):
+        """Evaluate tracer acceleration while honouring CPU chunk allocation."""
+        xp=self.ctx.xp
+        out=xp.empty_like(p)
+        def evaluate(part):
+            return part,self.accel(p[part],c1,c2,m1,m2)
+        for part,value in self.ctx.parallel_slices(len(p),evaluate):
+            out[part]=value
+        return out
     def step(self,p,v,c1,c2,vc1,vc2,m1,m2,dt,steps):
+        """Advance the coupled tracer/galaxy state with the selected solver.
+
+        The NumPy path divides tracer arrays into disjoint chunks through the
+        RunContext executor.  The CuPy path keeps one device array and lets the
+        CUDA kernels provide the parallelism without host synchronisation.
+        """
+        method=self.ctx.method
+        if method in {"default","leapfrog"}:
+            return self._step_leapfrog(p,v,c1,c2,vc1,vc2,m1,m2,dt,steps)
+        if method in {"euler","symplectic_euler"}:
+            return self._step_symplectic_euler(p,v,c1,c2,vc1,vc2,m1,m2,dt,steps)
+        if method == "murb_kinematic":
+            return self._step_murb_kinematic(p,v,c1,c2,vc1,vc2,m1,m2,dt,steps)
+        if method == "rk4":
+            return self._step_rk4(p,v,c1,c2,vc1,vc2,m1,m2,dt,steps)
+        raise ValueError(f"unknown galaxy-collision solver: {method}")
+
+    def _step_symplectic_euler(self,p,v,c1,c2,vc1,vc2,m1,m2,dt,steps):
+        """Kick then drift: first-order but symplectic and inexpensive."""
         for _ in range(steps):
-            v+=dt*self.accel(p,c1,c2,m1,m2); p+=dt*v
+            a=self.particle_accel(p,c1,c2,m1,m2)
             a1,a2=self.centre_accel(c1,c2,m1,m2)
-            vc1+=dt*a1; vc2+=dt*a2; c1+=dt*vc1; c2+=dt*vc2
+            v+=dt*a; p+=dt*v
+            vc1+=dt*a1; vc2+=dt*a2
+            c1+=dt*vc1; c2+=dt*vc2
         return p,v,c1,c2,vc1,vc2
 
-    def render(self,p,c1,c2,half,n1,m1,m2,size=(1280,720)):
+    def _step_murb_kinematic(self,p,v,c1,c2,vc1,vc2,m1,m2,dt,steps):
+        """Match MUrB's ordinary constant-acceleration body update exactly."""
+        half_dt2=.5*dt*dt
+        for _ in range(steps):
+            a=self.particle_accel(p,c1,c2,m1,m2)
+            a1,a2=self.centre_accel(c1,c2,m1,m2)
+            p+=dt*v+half_dt2*a
+            c1+=dt*vc1+half_dt2*a1; c2+=dt*vc2+half_dt2*a2
+            v+=dt*a; vc1+=dt*a1; vc2+=dt*a2
+        return p,v,c1,c2,vc1,vc2
+
+    def _step_leapfrog(self,p,v,c1,c2,vc1,vc2,m1,m2,dt,steps):
+        """Second-order kick-drift-kick leapfrog (velocity Verlet)."""
+        half_dt=.5*dt
+        for _ in range(steps):
+            a=self.particle_accel(p,c1,c2,m1,m2)
+            a1,a2=self.centre_accel(c1,c2,m1,m2)
+            v+=half_dt*a
+            p+=dt*v
+            vc1+=half_dt*a1; vc2+=half_dt*a2
+            c1+=dt*vc1; c2+=dt*vc2
+            a=self.particle_accel(p,c1,c2,m1,m2)
+            a1,a2=self.centre_accel(c1,c2,m1,m2)
+            v+=half_dt*a
+            vc1+=half_dt*a1; vc2+=half_dt*a2
+        return p,v,c1,c2,vc1,vc2
+
+    def _step_rk4(self,p,v,c1,c2,vc1,vc2,m1,m2,dt,steps):
+        """Classical fourth-order Runge-Kutta for the complete coupled state."""
+        def rhs(pp,vv,cc1,cc2,vv1,vv2):
+            aa=self.particle_accel(pp,cc1,cc2,m1,m2)
+            ac1,ac2=self.centre_accel(cc1,cc2,m1,m2)
+            return vv,aa,vv1,vv2,ac1,ac2
+        for _ in range(steps):
+            k1=rhs(p,v,c1,c2,vc1,vc2)
+            k2=rhs(p+.5*dt*k1[0],v+.5*dt*k1[1],
+                   c1+.5*dt*k1[2],c2+.5*dt*k1[3],
+                   vc1+.5*dt*k1[4],vc2+.5*dt*k1[5])
+            k3=rhs(p+.5*dt*k2[0],v+.5*dt*k2[1],
+                   c1+.5*dt*k2[2],c2+.5*dt*k2[3],
+                   vc1+.5*dt*k2[4],vc2+.5*dt*k2[5])
+            k4=rhs(p+dt*k3[0],v+dt*k3[1],c1+dt*k3[2],c2+dt*k3[3],
+                   vc1+dt*k3[4],vc2+dt*k3[5])
+            p+=dt*(k1[0]+2*k2[0]+2*k3[0]+k4[0])/6
+            v+=dt*(k1[1]+2*k2[1]+2*k3[1]+k4[1])/6
+            c1+=dt*(k1[2]+2*k2[2]+2*k3[2]+k4[2])/6
+            c2+=dt*(k1[3]+2*k2[3]+2*k3[3]+k4[3])/6
+            vc1+=dt*(k1[4]+2*k2[4]+2*k3[4]+k4[4])/6
+            vc2+=dt*(k1[5]+2*k2[5]+2*k3[5]+k4[5])/6
+        return p,v,c1,c2,vc1,vc2
+
+    def render(self,p,half,n1,m1,m2,size=(1280,720)):
         pts=to_numpy(p); W,H=size
         im=Image.new('RGB',size,(2,5,13))
         # Square world window mapped to a 16:9 frame without distortion.
@@ -214,6 +311,7 @@ class GalaxyCollisionDemo(Demo):
             p,v,c1,c2,vc1,vc2=self.step(p,v,c1,c2,vc1,vc2,m1,m2,dt,substeps)
             t_gyr=(i+1)/self.ctx.frames*span_gyr
             pts=to_numpy(p)
+            centres=to_numpy(self.ctx.xp.stack((c1,c2)))
             # Track the encounter: the frame follows the shrinking separation
             # so the merger does not happen inside two pixels.
             # Radial percentile, not per-coordinate: taking |x| and |y|
@@ -222,46 +320,38 @@ class GalaxyCollisionDemo(Demo):
             # percentile still ignores the few ejected tracers.
             reach=float(np.percentile(np.hypot(pts[:,0],pts[:,1]),92))
             half=float(np.clip(.85*half+.15*reach*1.45,70.0,sep*1.6))
-            im=self.render(p,c1,c2,half,N//2,m1,m2)
-            d=ImageDraw.Draw(im,'RGBA')
-            # A global physical view has to include the 770-kpc separation, so
-            # the discs are necessarily small. These are independently rendered
-            # close windows of the *same current particles*, not decorative art.
-            morph_alpha=1.0-self._smoothstep(.24,.48,(i+1)/self.ctx.frames)
-            if morph_alpha>0:
-                for x0,centre,label in ((590,c1,"MILKY WAY · 4 ARMS"),(925,c2,"ANDROMEDA · 2 ARMS + RING")):
-                    detail=self.render(p-centre,c1*0,c2*0,88,N//2,m1,m2,(300,175))
-                    patch=im.crop((x0,112,x0+300,287))
-                    im.paste(Image.blend(patch,detail,morph_alpha),(x0,112))
-                    d.rectangle((x0,112,x0+300,287),outline=(137,228,255,int(220*morph_alpha)),width=2)
-                    d.rectangle((x0,112,x0+300,137),fill=(4,10,24,int(220*morph_alpha)))
-                    d.text((x0+10,119),label,font=font(11,True),fill=(225,242,255,int(255*morph_alpha)))
-                d=ImageDraw.Draw(im,'RGBA')
-            d.rounded_rectangle((26,112,556,252),radius=16,fill=(4,9,22,205))
-            d.text((44,126),label,font=font(19,True),fill='white')
-            d.text((44,156),note,font=font(15),fill=(196,214,240))
-            d.text((44,180),f"t = +{t_gyr:.2f} Gyr from today",font=font(17,True),fill=(120,236,255))
-            d.text((44,206),f"separation {float(np.hypot(*(to_numpy(c2)-to_numpy(c1)))):.0f} kpc",font=font(15),fill=(206,224,248))
-            d.text((44,228),f"{N:,} tracers · brightness = mass per pixel · view {2*half:,.0f} kpc",font=font(14),fill=(150,170,200))
+            im=self.render(pts,half,N//2,m1,m2)
+            cpu_note=f" · CPU×{self.ctx.cpu_workers}" if self.ctx.xp is np else ""
+            solver=self.method_labels.get(self.ctx.method,self.ctx.method)
             im=add_title(im,"Galaxy collision",
-                         f"restricted N-body · M₁={m1/1e12:.1f}×10¹² M☉ · M₂={m2/1e12:.1f}×10¹² M☉ · {self.ctx.backend_name}")
+                         f"restricted N-body · {solver} · M1={m1/1e12:.1f}e12 Msun · M2={m2/1e12:.1f}e12 Msun · {self.ctx.backend_name}")
             add_progress(im,(i+1)/self.ctx.frames,"FIRST APPROACH","MERGER / TIDAL DEBRIS")
-            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"t=+{t_gyr:.2f} Gyr")
+            separation=float(np.linalg.norm(centres[1]-centres[0]))
+            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"t=+{t_gyr:.2f} Gyr",{
+                "encounter":label,"time":f"+{t_gyr:.2f} Gyr","separation":f"{separation:.0f} kpc",
+                "solver":solver,"tracers":f"{N:,}","view width":f"{2*half:,.0f} kpc",
+                "saved-frame interval":f"{span_gyr/self.ctx.frames*1000:.1f} Myr",
+                "solver step":f"{dt*TIME_UNIT_GYR*1000:.2f} Myr × {substeps}",
+                "compute":f"{self.ctx.backend_name}{cpu_note}"})
         # Reveal: the same encounter under the observational uncertainty on the
         # transverse velocity, which is what actually decides the outcome.
-        side=4; ims=[]; labels=[]
-        for j in range(side*side):
-            vt=0.0+j*(80.0/(side*side-1))
-            st=self.setup(max(2500,N//8),0,impact,speed,tilt)
-            st=list(st)
-            xp=self.ctx.xp
-            st[4]=xp.asarray([MW_M31['v_radial']*.5,vt*.5],dtype=xp.float32)
-            st[5]=xp.asarray([-MW_M31['v_radial']*.5,-vt*.5],dtype=xp.float32)
+        ens=int(self.ctx.params.get('_parallel_count',16))
+        side=max(2,int(math.ceil(math.sqrt(ens)))); ims=[]; labels=[]
+        reveal_frames=max(10,self.ctx.frames//2)
+        reveal_dt=total/(reveal_frames*substeps)
+        for j in range(ens):
+            vt=0.0+j*(80.0/max(1,ens-1))
+            # Rebuild the complete state with this measured transverse speed.
+            # Updating only the galaxy-centre velocities would leave the disc
+            # tracers moving with the old centres and invert the encounter.
+            st=self.setup(max(2500,N//8),1,impact,speed,tilt,
+                          transverse_velocity=vt)
             pp,vv,cc1,cc2,vv1,vv2=st[0],st[1],st[2],st[3],st[4],st[5]
-            for _ in range(max(10,self.ctx.frames//2)):
-                pp,vv,cc1,cc2,vv1,vv2=self.step(pp,vv,cc1,cc2,vv1,vv2,st[6],st[7],dt*2,substeps)
-            ims.append(self.render(pp,cc1,cc2,520,len(pp)//2,st[6],st[7],(260,146)))
-            labels.append(f"v⊥ {vt:.0f} km/s")
+            for _ in range(reveal_frames):
+                pp,vv,cc1,cc2,vv1,vv2=self.step(
+                    pp,vv,cc1,cc2,vv1,vv2,st[6],st[7],reveal_dt,substeps)
+            ims.append(self.render(pp,520,len(pp)//2,st[6],st[7],(260,146)))
+            labels.append(f"vT {vt:.0f} km/s")
         rev=mosaic(ims,side,title="There was never only one possible collision",
                    subtitle="The transverse velocity is measured to ±tens of km/s — and it decides the outcome.",
                    labels=labels,label_fill=(190,226,255))

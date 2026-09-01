@@ -142,6 +142,8 @@ class SurrogateWall:
 
 class NeuralWallDemo(Demo):
     id="neural_wall"; title="Neural-network wall"
+    backend_kind="torch"
+    timing_methods={"hero_image":"render","wall_image":"render"}
     def drawn_target(self,n,path):
         """Load a visitor's canvas drawing as the coordinate-network target."""
         with Image.open(path) as image:
@@ -166,9 +168,15 @@ class NeuralWallDemo(Demo):
         try:
             import torch
             req=getattr(self.ctx,'backend_requested','auto') if self.ctx else 'auto'
-            return TorchWall(torch,networks,tile,target,device=torch_device(req))
+            trainer=TorchWall(torch,networks,tile,target,device=torch_device(req))
+            self.ctx.set_backend_name(f"torch·{trainer.device}")
+            return trainer
         except Exception as e:
+            requested=getattr(self.ctx,'backend_requested','auto').lower()
+            if requested in {'cupy','cuda','gpu','hybrid','cpu+gpu','cpu_gpu'}:
+                raise RuntimeError(f"GPU requested for neural_wall but PyTorch CUDA could not start: {e}") from e
             warnings.warn(f"PyTorch unavailable; using deterministic reconstruction surrogate: {e}")
+            self.ctx.set_backend_name("numpy-surrogate")
             return SurrogateWall(networks,tile,target)
     @staticmethod
     def shade(a):
@@ -182,7 +190,7 @@ class NeuralWallDemo(Demo):
         tiles=[self.shade(a).resize((150,150),Image.Resampling.NEAREST) for a in outs]
         order=np.argsort(losses)
         labels=[f"{losses[i]:.4f}" for i in range(len(outs))]
-        im=mosaic(tiles,cols,size=(1280,720),gap=5,top=100,labels=labels,
+        im=mosaic(tiles,cols,size=(1280,720),gap=5,top=5,labels=labels,
                   label_fill=(210,232,255))
         # Mark the winner of the search; without it the wall is just texture.
         best=int(order[0]); r,c=divmod(best,cols)
@@ -243,43 +251,26 @@ class NeuralWallDemo(Demo):
         d.line((x1-126,y1-21,x1-108,y1-21),fill=(83,232,255,210),width=2); d.text((x1-103,y1-27),'+',font=font(11,True),fill=(160,190,218))
         d.line((x1-70,y1-21,x1-52,y1-21),fill=(247,98,196,210),width=2); d.text((x1-47,y1-27),'−',font=font(11,True),fill=(160,190,218))
     def hero_image(self,out,target,losses,best,history,networks,device,difficulty,step,total,training,state):
-        im=Image.new('RGB',(1280,720),(3,7,17))
+        # Main stream = only the network's current RGB reconstruction.  Target,
+        # weights, labels and loss now live in independently toggleable browser
+        # layers instead of consuming most of the scientific image.
+        im=self.shade(out).resize((1280,720),Image.Resampling.NEAREST)
         d=ImageDraw.Draw(im,'RGBA')
-        net=self.shade(out).resize((400,400),Image.Resampling.NEAREST)
-        tgt=self.shade(target).resize((200,200),Image.Resampling.NEAREST)
-        im.paste(net,(48,170)); im.paste(tgt,(485,170))
         progress=step/max(1,total)
         # Presentation-only scan head: it reveals the evolving reconstruction
         # in a printer-like path without altering the learned image at all.
-        print_progress=min(1.0,progress*1.85); scan_y=170+int(400*print_progress)
-        if scan_y<570: d.rectangle((48,scan_y,448,570),fill=(2,6,15,225))
-        scan_x=48+int(400*((print_progress*18)%1 if int(print_progress*18)%2==0 else 1-(print_progress*18)%1))
-        d.line((scan_x,scan_y-32,scan_x,scan_y+8),fill=(96,238,255,235),width=3)
-        d.polygon([(scan_x-16,scan_y-44),(scan_x+16,scan_y-44),(scan_x+23,scan_y-34),(scan_x-9,scan_y-34)],fill=(112,218,255,235))
-        d.rectangle((scan_x-9,scan_y-34,scan_x+23,scan_y-20),fill=(24,83,130,245),outline=(196,247,255,245))
-        d.ellipse((scan_x-10,scan_y-2,scan_x+10,scan_y+18),fill=(77,229,255,82))
-        d.text((60,124),"NETWORK OUTPUT",font=font(15,True),fill=(150,226,255))
-        d.text((485,144),"TARGET IMAGE",font=font(15,True),fill=(255,196,120))
-        d.rectangle((485,170,685,370),outline=(255,196,120,140),width=2)
-        d.rounded_rectangle((48,590,685,650),radius=12,fill=(6,11,24,210))
-        d.text((66,604),"Input: (x, y)  →  hidden features  →  output: red, green, blue",font=font(16,True),fill='white')
-        lo=hyperparameters(networks)
-        d.text((48,562),f"hidden width {int(lo[1][best])}   ·   learning rate {lo[0][best]:.2e}   ·   step {step} · {device}",font=font(14,True),fill=(150,170,200))
-        self.draw_network_view(d,state,progress,730,120,1230,455)
-        # Loss curve makes "it is learning" a measurement rather than a claim.
-        x0,y0,x1,y1=750,525,1210,650
-        d.rounded_rectangle((x0-12,y0-16,x1+12,y1+14),radius=12,fill=(6,11,24,210))
-        d.text((x0,y0-14),"best loss",font=font(13,True),fill=(150,226,255))
-        if len(history)>1:
-            hs=np.asarray(history,dtype=float); hs=np.log10(np.maximum(hs,1e-8))
-            hi,lo_=hs.max(),hs.min(); rng=max(1e-6,hi-lo_)
-            pts=[(x0+(x1-x0)*k/(len(hs)-1),y1-(y1-y0)*(v-lo_)/rng) for k,v in enumerate(hs)]
-            d.line(pts,fill=(116,228,255,235),width=3)
-        d.text((x1-96,y1-2),f"{losses[best]:.5f}",font=font(15,True),fill=(150,226,255))
-        head="This network is learning…" if training else "Reconstructing the target…"
-        sub=(f"one coordinate network of {networks} · difficulty {difficulty:.1f} · {device}" if training
-             else f"NOT TRAINING — deterministic surrogate, PyTorch unavailable · {networks} variants")
-        return add_title(im,head,sub,badge="LIVE TRAINING" if training else "SURROGATE")
+        print_progress=min(1.0,progress*1.85); scan_y=int(720*print_progress)
+        if scan_y<720: d.rectangle((0,scan_y,1280,720),fill=(2,6,15,232))
+        phase=print_progress*24; scan_x=int(1280*((phase%1) if int(phase)%2==0 else 1-phase%1))
+        d.line((scan_x,scan_y-42,scan_x,scan_y+9),fill=(96,238,255,235),width=4)
+        d.rectangle((scan_x-18,scan_y-43,scan_x+18,scan_y-24),fill=(24,83,130,245),outline=(196,247,255,245),width=2)
+        d.ellipse((scan_x-13,scan_y-5,scan_x+13,scan_y+21),fill=(77,229,255,82))
+        return im
+
+    def save_network_overlay(self,state,progress,frame):
+        im=Image.new('RGB',(520,360),(3,7,17)); d=ImageDraw.Draw(im,'RGBA')
+        self.draw_network_view(d,state,progress,10,8,510,350)
+        self.ctx.save_frame(im,self.ctx.run_dir/'overlays'/'network'/f'frame_{frame:04d}.jpg')
     def budget(self):
         """Total optimiser steps for the run, independent of frame count.
 
@@ -299,32 +290,35 @@ class NeuralWallDemo(Demo):
         trainer=self.make_trainer(networks,tile,target)
         training=isinstance(trainer,TorchWall)
         total=self.budget(); frames=self.ctx.frames
-        outs,losses,device=trainer(1)
+        with self.ctx.stage("simulation"):
+            outs,losses,device=trainer(1)
         history=[float(losses.min())]
         hero_frames=int(frames*.55)
         done=0
         for i in range(frames):
             step_target=int(round(total*(i+1)/frames))
-            outs,losses,device=trainer(max(1,step_target-done)); done=step_target
+            with self.ctx.stage("simulation"):
+                outs,losses,device=trainer(max(1,step_target-done))
+            done=step_target
             best=int(np.argmin(losses)); history.append(float(losses[best]))
             if i < hero_frames:
                 state=trainer.visual_state(best)
                 im=self.hero_image(outs[best],target,losses,best,history,networks,device,
                                    difficulty,done,total,training,state)
             else:
+                state=trainer.visual_state(best)
                 im,best=self.wall_image(outs,losses,networks,training)
                 verb="training" if training else "fitting"
                 im=add_title(im,"Actually… I forgot something.",
                              f"We were {verb} {networks} networks · learning rate varies left→right · width varies top→bottom · {device}",
                              badge="PARALLEL SEARCH")
                 d=ImageDraw.Draw(im,'RGBA')
-                d.text((26,70),"We were not only training a network. We were searching for one.",font=font(16,True),fill=(190,220,255))
+            self.save_network_overlay(state,done/max(1,total),i)
             add_progress(im,(i+1)/self.ctx.frames,"ONE MODEL?","MODEL SEARCH")
-            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"best loss {losses[best]:.5f}")
+            lo=hyperparameters(networks)
+            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"best loss {losses[best]:.5f}",{
+                "best loss":f"{losses[best]:.5f}","worst loss":f"{losses.max():.5f}",
+                "winning width":f"{int(lo[1][best])}","learning rate":f"{lo[0][best]:.2e}",
+                "training step":f"{done:,} / {total:,}","networks":f"{networks:,}","device":device})
         rev,best=self.wall_image(outs,losses,networks,training)
-        d=ImageDraw.Draw(rev,'RGBA')
-        d.rectangle((0,0,1280,100),fill=(3,6,15,235))
-        d.text((24,14),f"{networks} networks trained side-by-side",font=font(31,True),fill='white')
-        d.text((26,52),"Learning rate varies left → right, hidden width top → bottom. Green marks the best model found.",font=font(15),fill=(184,208,238))
-        d.text((26,74),f"best loss {losses[best]:.5f}  ·  worst {losses.max():.5f}  ·  {device}",font=font(15,True),fill=(120,236,255))
         rp=self.ctx.run_dir/'reveal.jpg'; self.ctx.save_frame(rev,rp); self.ctx.finish(rp)

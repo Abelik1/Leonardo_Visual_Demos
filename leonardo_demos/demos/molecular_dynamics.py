@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 from ..backend import to_numpy
 from ..base import Demo
-from ..render import add_progress, add_title, font, mosaic, save_frame
+from ..render import add_progress, add_title, font, mosaic
 
 
 ATOM_COLOURS = np.array(
@@ -22,6 +22,7 @@ ATOM_COLOURS = np.array(
 
 
 class MolecularDynamicsDemo(Demo):
+    timing_methods={"initialise":"initialization","step":"simulation","hero":"render"}
     """Coarse-grained polymer dynamics with all-pairs non-bonded forces."""
 
     id = "molecular_dynamics"
@@ -178,23 +179,7 @@ class MolecularDynamicsDemo(Demo):
 
     def hero(self, pos, types, i, done, total, temperature, attraction, solvent, sequence):
         pn, tn = to_numpy(pos), to_numpy(types)
-        molecule = self.molecule_image(pn, tn, angle=0.012 * i)
-        canvas = Image.new("RGB", (1280, 720), (2, 5, 14))
-        canvas.paste(molecule, (0, 72))
-        rg, contacts = self.diagnostics(pn)
-        pair_evals = done * len(pn) * (len(pn) - 1) // 2
-        d = ImageDraw.Draw(canvas, "RGBA")
-        d.rounded_rectangle((842, 126, 1248, 522), radius=22, fill=(5, 10, 24, 228), outline=(118, 211, 249, 80), width=2)
-        d.text((874, 152), "MOLECULAR TRAJECTORY", font=font(16, True), fill=(135, 233, 255))
-        d.text((874, 194), f"sequence {chr(65 + int(sequence) % 4)}", font=font(24, True), fill="white")
-        d.text((874, 234), f"temperature      {temperature:.0f} K", font=font(17), fill=(255, 178, 92))
-        d.text((874, 270), f"attraction       {attraction:.2f} ε", font=font(17), fill=(206, 192, 255))
-        d.text((874, 306), f"solvent quality  {solvent:.2f}", font=font(17), fill=(179, 211, 241))
-        d.line((874, 348, 1214, 348), fill=(255, 255, 255, 40), width=1)
-        d.text((874, 372), f"radius of gyration  {rg:.3f}", font=font(17, True), fill=(121, 239, 207))
-        d.text((874, 406), f"close contacts      {contacts:,}", font=font(16), fill=(194, 216, 242))
-        d.text((874, 440), f"MD integration step {done:,}", font=font(16), fill=(194, 216, 242))
-        d.text((874, 474), f"pair evaluations    {pair_evals:,}", font=font(16), fill=(116, 231, 255))
+        canvas = self.molecule_image(pn, tn, size=(1280,720), angle=0.012 * i)
         canvas = add_title(
             canvas,
             "Molecular Machine",
@@ -218,9 +203,12 @@ class MolecularDynamicsDemo(Demo):
             pos, vel = self.step(pos, vel, types, temperature, attraction, solvent, max(1, target - done))
             done = target
             image = self.hero(pos, types, i, done, total, temperature, attraction, solvent, sequence)
-            save_frame(image, self.ctx.frame_path(i))
-            rg, _ = self.diagnostics(to_numpy(pos))
-            self.ctx.write_status(i, f"molecular step {done:,} · Rg {rg:.3f}")
+            self.ctx.save_frame(image, self.ctx.frame_path(i))
+            rg, contacts = self.diagnostics(to_numpy(pos)); pair_evals=done*n*(n-1)//2
+            self.ctx.write_status(i, f"molecular step {done:,} · Rg {rg:.3f}",{
+                "sequence":chr(65+sequence%4),"temperature":f"{temperature:.0f} K","attraction":f"{attraction:.2f} ε",
+                "solvent quality":f"{solvent:.2f}","radius of gyration":f"{rg:.3f}",
+                "close contacts":f"{contacts:,}","integration step":f"{done:,} / {total:,}","pair evaluations":f"{pair_evals:,}"})
 
         ens = max(4, int(self.settings.get("ensemble", 16)))
         side = max(2, int(math.sqrt(ens)))
@@ -251,5 +239,5 @@ class MolecularDynamicsDemo(Demo):
             label_fill=(199, 233, 255),
         )
         rp = self.ctx.run_dir / "reveal.jpg"
-        save_frame(reveal, rp)
+        self.ctx.save_frame(reveal, rp)
         self.ctx.finish(rp)

@@ -1,4 +1,19 @@
 {
+  "benchmark": {
+    "black_hole": {"width": 640, "height": 360, "ensemble": 9},
+    "pbh": {"radial_points": 180, "ensemble": 16},
+    "fluid": {"nx": 192, "ny": 108, "tracers": 500, "trail": 10, "tracer_boost": 9.0, "total_steps": 500},
+    "cosmic_web": {"grid": 96, "particles": 20000, "total_steps": 220, "sweep_steps": 160, "jeans_ref": 2.4, "ic_amplitude": 0.9, "ic_velocity": 0.55},
+    "galaxy_collision": {"particles": 12000, "substeps": 4, "span_gyr": 7.5},
+    "galaxy_collision_3d": {"particles": 384, "substeps": 2, "span_gyr": 7.5, "softening": 4.0, "force_tile": 96},
+    "reaction_diffusion": {"n": 128, "total_steps": 1000, "sweep_steps": 450, "ensemble": 9},
+    "crystal": {"depth": 4, "ensemble": 9, "zoom_levels": 2, "zoom_depth": 6, "zoom_tile": 192, "zoom_max_level": 20, "zoom_detail_base": 6, "zoom_detail_max": 12},
+    "neural_wall": {"networks": 16, "tile": 32, "total_steps": 160},
+    "fusion_plasma": {"n": 64, "total_steps": 180, "ensemble": 9, "sweep_n": 36, "sweep_steps": 90, "tracers": 90, "trail": 8},
+    "plasma_guardian": {"batch": 32, "horizon": 12, "train_updates": 10, "display_steps": 40},
+    "weather_ensemble": {"n": 48, "total_steps": 160, "ensemble": 9, "sweep_n": 30, "sweep_steps": 90},
+    "molecular_dynamics": {"particles": 56, "total_steps": 240, "ensemble": 9, "sweep_particles": 28, "sweep_steps": 100}
+  },
   "local": {
     "black_hole": {
       "width": 640,
@@ -32,6 +47,13 @@
       "substeps": 6,
       "span_gyr": 7.5
     },
+    "galaxy_collision_3d": {
+      "particles": 600,
+      "substeps": 3,
+      "span_gyr": 7.5,
+      "softening": 4.0,
+      "force_tile": 128
+    },
     "reaction_diffusion": {
       "n": 192,
       "total_steps": 12000,
@@ -43,7 +65,10 @@
       "ensemble": 25,
       "zoom_levels": 3,
       "zoom_depth": 7,
-      "zoom_tile": 256
+      "zoom_tile": 256,
+      "zoom_max_level": 24,
+      "zoom_detail_base": 7,
+      "zoom_detail_max": 14
     },
     "neural_wall": {
       "networks": 36,
@@ -55,7 +80,15 @@
       "total_steps": 700,
       "ensemble": 16,
       "sweep_n": 44,
-      "sweep_steps": 220
+      "sweep_steps": 220,
+      "tracers": 180,
+      "trail": 12
+    },
+    "plasma_guardian": {
+      "batch": 96,
+      "horizon": 24,
+      "train_updates": 100,
+      "display_steps": 84
     },
     "weather_ensemble": {
       "n": 64,
@@ -105,6 +138,13 @@
       "substeps": 8,
       "span_gyr": 7.5
     },
+    "galaxy_collision_3d": {
+      "particles": 1800,
+      "substeps": 4,
+      "span_gyr": 7.5,
+      "softening": 3.5,
+      "force_tile": 160
+    },
     "reaction_diffusion": {
       "n": 320,
       "total_steps": 16000,
@@ -116,7 +156,10 @@
       "ensemble": 36,
       "zoom_levels": 4,
       "zoom_depth": 8,
-      "zoom_tile": 256
+      "zoom_tile": 256,
+      "zoom_max_level": 28,
+      "zoom_detail_base": 8,
+      "zoom_detail_max": 16
     },
     "neural_wall": {
       "networks": 128,
@@ -128,7 +171,15 @@
       "total_steps": 1500,
       "ensemble": 25,
       "sweep_n": 72,
-      "sweep_steps": 480
+      "sweep_steps": 480,
+      "tracers": 300,
+      "trail": 14
+    },
+    "plasma_guardian": {
+      "batch": 384,
+      "horizon": 30,
+      "train_updates": 360,
+      "display_steps": 112
     },
     "weather_ensemble": {
       "n": 144,
@@ -178,6 +229,13 @@
       "substeps": 10,
       "span_gyr": 7.5
     },
+    "galaxy_collision_3d": {
+      "particles": 6000,
+      "substeps": 6,
+      "span_gyr": 7.5,
+      "softening": 3.0,
+      "force_tile": 192
+    },
     "reaction_diffusion": {
       "n": 512,
       "total_steps": 24000,
@@ -189,7 +247,10 @@
       "ensemble": 64,
       "zoom_levels": 5,
       "zoom_depth": 9,
-      "zoom_tile": 256
+      "zoom_tile": 256,
+      "zoom_max_level": 32,
+      "zoom_detail_base": 9,
+      "zoom_detail_max": 18
     },
     "neural_wall": {
       "networks": 512,
@@ -201,7 +262,15 @@
       "total_steps": 3000,
       "ensemble": 64,
       "sweep_n": 128,
-      "sweep_steps": 1000
+      "sweep_steps": 1000,
+      "tracers": 500,
+      "trail": 16
+    },
+    "plasma_guardian": {
+      "batch": 2048,
+      "horizon": 36,
+      "train_updates": 1000,
+      "display_steps": 140
     },
     "weather_ensemble": {
       "n": 288,

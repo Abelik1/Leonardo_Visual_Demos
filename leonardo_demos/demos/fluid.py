@@ -11,8 +11,38 @@ W,H=1280,720
 
 
 class FluidDemo(Demo):
+    timing_methods={"init":"initialization","step":"simulation","advect":"visualization","render":"render"}
     id="fluid"; title="Virtual wind tunnel"
-    def init(self,nx,ny,u0):
+    def build_obstacles(self,nx,ny,preset,custom_grid=None):
+        """Build the actual LBM solid mask used by both solver and renderer."""
+        yy,xx=np.mgrid[0:ny,0:nx]
+        mask=np.zeros((ny,nx),dtype=bool)
+        preset=int(round(preset))
+        if preset==1:
+            for cy in (ny*.35,ny*.65):
+                mask|=(xx-nx*.30)**2+(yy-cy)**2 < (ny*.095)**2
+        elif preset==2:
+            # Two deliberately different bluff bodies make their interacting
+            # wakes obvious: a streamlined ellipse followed by a small block.
+            mask|=((xx-nx*.26)/(nx*.075))**2+((yy-ny*.42)/(ny*.065))**2 < 1
+            mask|=(np.abs(xx-nx*.39)<nx*.026)&(np.abs(yy-ny*.62)<ny*.105)
+        else:
+            mask|=(xx-nx*.28)**2+(yy-(ny*.5+.5))**2 < (ny*.15)**2
+        if custom_grid:
+            grid=np.asarray(custom_grid,dtype=bool)
+            gh,gw=grid.shape
+            for row,col in np.argwhere(grid):
+                x0=max(3,int(round(col*nx/gw))); x1=min(nx-3,int(round((col+1)*nx/gw)))
+                y0=max(1,int(round(row*ny/gh))); y1=min(ny-1,int(round((row+1)*ny/gh)))
+                if x1>x0 and y1>y0: mask[y0:y1,x0:x1]=True
+        ys,xs=np.where(mask)
+        self.obstacle_centre=(float(xs.mean()),float(ys.mean()))
+        self.obstacle_radius=math.sqrt(float(mask.sum())/math.pi)
+        self.obstacle_bounds=(int(xs.min()),int(xs.max()),int(ys.min()),int(ys.max()))
+        self.obstacle_mask=mask
+        return mask
+
+    def init(self,nx,ny,u0,preset=0,custom_grid=None):
         xp=self.ctx.xp
         # D2Q9 LBM
         c=xp.asarray([[0,0],[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[-1,-1],[1,-1]],dtype=xp.int32)
@@ -30,10 +60,7 @@ class FluidDemo(Demo):
         # A half-cell vertical offset breaks the lattice-symmetric stagnation
         # point. Without it the wake stays perfectly symmetric for a very long
         # time and the von Karman street never appears.
-        yy,xx=xp.mgrid[0:ny,0:nx]
-        self.obstacle=(float(nx)*.28,float(ny)*.5+.5,float(ny)*.15)
-        ox,oy,orad=self.obstacle
-        mask=(xx-ox)**2+(yy-oy)**2 < orad*orad
+        mask=xp.asarray(self.build_obstacles(nx,ny,preset,custom_grid))
         return f,c,w,mask
     def step(self,f,c,w,mask,u0,steps):
         xp=self.ctx.xp; tau=.57; omega=1/tau
@@ -64,7 +91,7 @@ class FluidDemo(Demo):
         fx=x-x0; fy=y-y0
         return (field[y0,x0]*(1-fx)*(1-fy)+field[y0,x1]*fx*(1-fy)
                 +field[y1,x0]*(1-fx)*fy+field[y1,x1]*fx*fy)
-    def advect(self,trail,ux,uy,nx,ny,rng,dt,substeps=4):
+    def advect(self,trail,ux,uy,nx,ny,rng,dt,mask,substeps=4):
         """Advance the tracers and push the new position onto their trail.
 
         A single position per particle produced streaks under a pixel long at
@@ -77,8 +104,8 @@ class FluidDemo(Demo):
         for _ in range(substeps):
             vx=self.sample(ux,pts,nx,ny); vy=self.sample(uy,pts,nx,ny)
             pts=pts+np.stack([vx,vy],axis=1)*(dt/substeps)
-        ox,oy,orad=self.obstacle
-        inside=(pts[:,0]-ox)**2+(pts[:,1]-oy)**2 < orad*orad
+        ix=np.clip(pts[:,0].astype(np.int32),0,nx-1); iy=np.clip(pts[:,1].astype(np.int32),0,ny-1)
+        inside=mask[iy,ix]
         stalled=np.hypot(pts[:,0]-trail[:,-1,0],pts[:,1]-trail[:,-1,1])<1e-3
         gone=(pts[:,0]>=nx-1)|(pts[:,0]<0)|(pts[:,1]<0)|(pts[:,1]>=ny-1)|inside|stalled
         trail=np.concatenate([trail[:,1:,:],pts[:,None,:]],axis=1)
@@ -132,13 +159,19 @@ class FluidDemo(Demo):
                     d.line((x0+dx*.5,y0+dy*.5,
                             x0+dx*.5-6*math.cos(ang+s*.4),y0+dy*.5-6*math.sin(ang+s*.4)),
                            fill=(180,236,255,a),width=2)
-        ox,oy,orad=self.obstacle
-        d.ellipse((ox*sx-orad*sx,oy*sy-orad*sy,ox*sx+orad*sx,oy*sy+orad*sy),
-                  fill=(7,12,24,252),outline=(190,232,255,220),width=3)
+        # Draw the exact bounce-back mask, including every custom grid block.
+        solid=Image.fromarray((self.obstacle_mask*255).astype(np.uint8),'L').resize((W,H),Image.Resampling.NEAREST)
+        body=Image.new('RGBA',(W,H),(7,12,24,0)); body.putalpha(solid)
+        im=Image.alpha_composite(im.convert('RGBA'),body).convert('RGB')
+        d=ImageDraw.Draw(im,'RGBA')
+        edge=self.obstacle_mask & ~(np.roll(self.obstacle_mask,1,0)&np.roll(self.obstacle_mask,-1,0)&np.roll(self.obstacle_mask,1,1)&np.roll(self.obstacle_mask,-1,1))
+        outline=Image.fromarray((edge*255).astype(np.uint8),'L').resize((W,H),Image.Resampling.NEAREST).filter(ImageFilter.MaxFilter(3))
+        stroke=Image.new('RGBA',(W,H),(190,232,255,0)); stroke.putalpha(outline.point(lambda p:int(p*.82)))
+        im=Image.alpha_composite(im.convert('RGBA'),stroke).convert('RGB')
         return im,spd
     def panel(self,im,ux,uy,rho,nx,ny,speed,mach_note):
         d=ImageDraw.Draw(im,'RGBA')
-        ox,oy,orad=self.obstacle
+        ox,oy=self.obstacle_centre; orad=self.obstacle_radius
         # Pressure from the LBM density: p = rho * cs^2, cs^2 = 1/3.
         p=(rho-1.0)/3.0
         front=float(p[int(oy),max(0,int(ox-orad-2))])
@@ -164,7 +197,9 @@ class FluidDemo(Demo):
         nx,ny=int(self.settings['nx']),int(self.settings['ny'])
         speed=float(self.ctx.params.get('speed',.06))
         total=self.budget(); done=0
-        f,c,w,mask=self.init(nx,ny,speed)
+        preset=int(self.ctx.params.get('obstacle',0))
+        custom=self.ctx.params.get('_obstacle_grid')
+        f,c,w,mask=self.init(nx,ny,speed,preset,custom)
         rng=np.random.default_rng(11)
         ntr=int(self.settings.get('tracers',900))
         K=int(self.settings.get('trail',12))
@@ -179,22 +214,22 @@ class FluidDemo(Demo):
             uxn,uyn,rhon=to_numpy(ux),to_numpy(uy),to_numpy(rho)
             # Several small advection sub-steps keep streaks smooth and stop
             # particles tunnelling through the cylinder.
-            trail=self.advect(trail,uxn,uyn,nx,ny,rng,min(spf,14)*boost)
+            trail=self.advect(trail,uxn,uyn,nx,ny,rng,min(spf,14)*boost,self.obstacle_mask)
             im,spd=self.render(uxn,uyn,vort,rhon,trail,nx,ny,speed)
-            re=speed*(2*self.obstacle[2])/((.57-.5)/3)
-            im=self.panel(im,uxn,uyn,rhon,nx,ny,speed,f"Reynolds number ≈ {re:,.0f}  ·  {nx*ny:,} lattice cells")
+            re=speed*(2*self.obstacle_radius)/((.57-.5)/3)
             im=add_title(im,"Virtual wind tunnel",f"D2Q9 lattice-Boltzmann · {nx}×{ny} cells · {self.ctx.backend_name}")
             add_progress(im,(i+1)/self.ctx.frames,"LAMINAR START","VORTEX WAKE")
-            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,"Updating lattice cells")
+            ox,oy=self.obstacle_centre; x0,x1,_,_=self.obstacle_bounds; pressure=(rhon-1.0)/3.0
+            front=float(pressure[int(oy),max(0,x0-2)]); back=float(pressure[int(oy),min(nx-1,x1+2)])
+            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,"Updating lattice cells",{
+                "inlet speed":f"{speed:.4f}","Reynolds number":f"{re:,.0f}","grid":f"{nx} × {ny}",
+                "obstacle preset":("single cylinder","twin cylinders","mixed bodies")[preset],
+                "custom blocks":f"{int(np.asarray(custom).sum()) if custom else 0}",
+                "front pressure":f"{front:+.5f}","wake pressure":f"{back:+.5f}","lattice step":f"{done:,} / {total:,}"})
         rev=im.copy(); d=ImageDraw.Draw(rev,'RGBA')
         cols,rows=4,2
         for r in range(rows):
             for cc in range(cols):
                 x0=cc*W/cols; x1=(cc+1)*W/cols; y0=r*H/rows; y1=(r+1)*H/rows
                 d.rectangle((x0,y0,x1,y1),outline=(124,232,255,190),width=4)
-                d.rounded_rectangle((x0+12,y0+12,x0+92,y0+46),radius=8,fill=(3,9,18,190))
-                d.text((x0+24,y0+20),f"GPU {r*cols+cc+1}",font=font(13,True),fill='white')
-        d.rectangle((0,0,W,90),fill=(3,6,15,225))
-        d.text((24,15),"Zoom out: the fluid domain can be divided across GPUs",font=font(30,True),fill='white')
-        d.text((26,54),"Neighbouring domains exchange boundary data while most cell updates remain local.",font=font(16),fill=(185,208,238))
         rp=self.ctx.run_dir/'reveal.jpg'; self.ctx.save_frame(rev,rp); self.ctx.finish(rp)

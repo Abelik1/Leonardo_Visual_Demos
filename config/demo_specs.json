@@ -55,7 +55,13 @@
         "min": 0,
         "max": 2,
         "step": 1,
-        "value": 0
+        "value": 0,
+        "kind": "choice",
+        "options": {
+          "0": "Single cylinder",
+          "1": "Twin cylinders",
+          "2": "Ellipse + block"
+        }
       }
     }
   },
@@ -80,6 +86,30 @@
         "max": 1,
         "step": 0.02,
         "value": 0.24
+      },
+      "expanding_space": {
+        "min": 0,
+        "max": 1,
+        "step": 1,
+        "value": 1,
+        "kind": "toggle",
+        "label": "Expanding space"
+      },
+      "dark_energy": {
+        "min": 0,
+        "max": 1,
+        "step": 1,
+        "value": 1,
+        "kind": "toggle",
+        "label": "Dark energy acceleration"
+      },
+      "warm_dark_matter": {
+        "min": 0,
+        "max": 1,
+        "step": 1,
+        "value": 0,
+        "kind": "toggle",
+        "label": "Warm dark matter cutoff"
       }
     }
   },
@@ -185,6 +215,36 @@
       }
     }
   },
+  "galaxy_collision_3d": {
+    "name": "Galaxy collision — full 3D gravity",
+    "tagline": "Every massive particle pulls every other particle; rotate the encounter in space.",
+    "params": {
+      "impact": {
+        "min": 0,
+        "max": 1,
+        "step": 0.05,
+        "value": 0.35
+      },
+      "speed": {
+        "min": 0.5,
+        "max": 1.5,
+        "step": 0.05,
+        "value": 1.0
+      },
+      "disc_tilt": {
+        "min": 0,
+        "max": 90,
+        "step": 1,
+        "value": 35
+      },
+      "softening": {
+        "min": 1,
+        "max": 12,
+        "step": 0.5,
+        "value": 4
+      }
+    }
+  },
   "fusion_plasma": {
     "name": "Star in a Bottle",
     "tagline": "Confine a turbulent plasma, then reveal the reactor operating map.",
@@ -203,6 +263,18 @@
       },
       "density": {
         "min": 0.5,
+        "max": 1.5,
+        "step": 0.05,
+        "value": 1.0
+      }
+    }
+  },
+  "plasma_guardian": {
+    "name": "AI Plasma Guardian",
+    "tagline": "Train a neural controller to catch an instability before it becomes a disruption.",
+    "params": {
+      "instability": {
+        "min": 0.6,
         "max": 1.5,
         "step": 0.05,
         "value": 1.0

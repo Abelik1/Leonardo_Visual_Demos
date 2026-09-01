@@ -5,6 +5,11 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from .colors import palette, normalize
 
+# The browser owns titles, readouts and legends.  Main and reveal images are
+# scientific imagery only; this constant exists for a future legacy-export
+# path, not for the interactive viewer.
+BAKE_PRESENTATION = False
+
 
 def font(size=26, bold=False):
     candidates=[
@@ -25,6 +30,8 @@ def array_image(a, kind="plasma", size=None):
 
 
 def add_title(im, title, subtitle="", badge="LIVE COMPUTE"):
+    if not BAKE_PRESENTATION:
+        return im.convert("RGB")
     im=im.convert("RGB")
     d=ImageDraw.Draw(im,"RGBA")
     w,h=im.size
@@ -40,6 +47,8 @@ def add_title(im, title, subtitle="", badge="LIVE COMPUTE"):
 
 
 def add_progress(im, progress, left="COMPUTE", right="RESULT"):
+    if not BAKE_PRESENTATION:
+        return im
     d=ImageDraw.Draw(im,"RGBA"); w,h=im.size
     y=h-28
     d.rounded_rectangle((26,y,w-26,y+8),radius=4,fill=(255,255,255,35))
@@ -67,7 +76,7 @@ def mosaic(images, cols, size=(1280,720), gap=8, title=None, top=None, subtitle=
     """
     W,H=size
     rows=math.ceil(len(images)/cols)
-    if top is None: top=86 if title else 18
+    if top is None: top=86 if (title and BAKE_PRESENTATION) else 8
     tile_w=(W-gap*(cols+1))//cols
     tile_h=(H-top-gap*(rows+1))//rows
     out=Image.new("RGB",size,(3,6,15))
@@ -75,7 +84,7 @@ def mosaic(images, cols, size=(1280,720), gap=8, title=None, top=None, subtitle=
         r,c=divmod(i,cols)
         thumb=im.convert("RGB").resize((tile_w,tile_h),Image.Resampling.LANCZOS)
         out.paste(thumb,(gap+c*(tile_w+gap),top+r*(tile_h+gap)))
-    if labels:
+    if labels and BAKE_PRESENTATION:
         d=ImageDraw.Draw(out,"RGBA")
         fs=max(9,min(15,int(tile_h*.22)))
         band=fs+7
@@ -86,7 +95,7 @@ def mosaic(images, cols, size=(1280,720), gap=8, title=None, top=None, subtitle=
                 x=gap+c*(tile_w+gap); y=top+r*(tile_h+gap)
                 d.rectangle((x,y+tile_h-band,x+tile_w,y+tile_h),fill=(2,5,15,205))
                 d.text((x+4,y+tile_h-band+3),str(text),font=font(fs,True),fill=label_fill)
-    if title:
+    if title and BAKE_PRESENTATION:
         d=ImageDraw.Draw(out,"RGBA")
         d.text((22,18),title,font=font(30,True),fill="white")
         d.text((24,54),subtitle or "The same question, explored in parallel.",font=font(16),fill=(180,203,235))

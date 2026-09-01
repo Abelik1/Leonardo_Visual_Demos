@@ -11,6 +11,7 @@ from ..render import add_progress, add_title, font, mosaic, save_frame
 
 
 class WeatherEnsembleDemo(Demo):
+    timing_methods={"initialise":"initialization","step":"simulation","hero":"render"}
     """Reduced global atmosphere with a genuine initial-condition ensemble."""
 
     id = "weather_ensemble"
@@ -251,23 +252,7 @@ class WeatherEnsembleDemo(Demo):
     def hero(self, zeta, humidity, i, done, total, warming, jet, uncertainty):
         zn, hn = to_numpy(zeta), to_numpy(humidity)
         centre = -32 + 18 * done / total
-        globe, bounds = self.globe(zn, hn, warming, central_lon=centre)
-        canvas = Image.new("RGB", (1280, 720), (2, 6, 16))
-        canvas.paste(globe, (0, 82))
-        lon, lat, strength = self.storm_position(zn)
-        d = ImageDraw.Draw(canvas, "RGBA")
-        d.rounded_rectangle((810, 126, 1248, 510), radius=22, fill=(5, 11, 26, 228), outline=(96, 186, 245, 85), width=2)
-        d.text((842, 152), "FORECAST CLOCK", font=font(17, True), fill=(139, 232, 255))
-        forecast_hours = 120 * done / total
-        d.text((842, 194), f"+{forecast_hours:05.1f} forecast hours", font=font(25, True), fill="white")
-        d.text((842, 242), f"ocean warming   +{warming:.1f} °C", font=font(17), fill=(255, 184, 103))
-        d.text((842, 278), f"jet-stream scale {jet:.2f}×", font=font(17), fill=(192, 213, 242))
-        d.text((842, 314), f"initial uncertainty {uncertainty:.0f}%", font=font(17), fill=(192, 213, 242))
-        d.line((842, 354, 1214, 354), fill=(255, 255, 255, 40), width=1)
-        d.text((842, 378), "TRACKED CYCLONIC CENTRE", font=font(14, True), fill=(126, 231, 255))
-        d.text((842, 408), f"{abs(lat):.1f}°{'N' if lat >= 0 else 'S'}  {abs(lon):.1f}°{'E' if lon >= 0 else 'W'}", font=font(21, True), fill="white")
-        d.text((842, 444), f"relative vorticity {strength:+.3f}", font=font(15), fill=(181, 205, 238))
-        d.text((842, 474), f"grid-cell updates {done * zn.size:,}", font=font(15), fill=(115, 231, 255))
+        canvas, bounds = self.globe(zn, hn, warming, size=(1280,720), central_lon=centre)
         canvas = add_title(
             canvas,
             "Storm Factory",
@@ -292,7 +277,12 @@ class WeatherEnsembleDemo(Demo):
             done = target
             image = self.hero(zeta, humidity, i, done, total, warming, jet, uncertainty)
             self.ctx.save_frame(image, self.ctx.frame_path(i))
-            self.ctx.write_status(i, f"forecast +{120 * done / total:.1f} h")
+            zn=to_numpy(zeta); lon,lat,strength=self.storm_position(zn)
+            self.ctx.write_status(i, f"forecast +{120 * done / total:.1f} h",{
+                "forecast time":f"+{120*done/total:.1f} h","ocean warming":f"+{warming:.1f} °C",
+                "jet stream":f"{jet:.2f}×","initial uncertainty":f"{uncertainty:.0f}%",
+                "cyclone centre":f"{abs(lat):.1f}°{'N' if lat>=0 else 'S'}, {abs(lon):.1f}°{'E' if lon>=0 else 'W'}",
+                "relative vorticity":f"{strength:+.3f}"})
 
         ens = max(4, int(self.settings.get("ensemble", 16)))
         side = max(2, int(math.sqrt(ens)))

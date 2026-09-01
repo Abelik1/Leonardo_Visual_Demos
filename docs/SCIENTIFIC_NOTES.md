@@ -4,7 +4,9 @@ The demos aim to make legitimate computational ideas visible, but they intention
 
 ## Black-hole lensing
 
-The included solver is an **exhibition-grade image-space gravitational lens mapping**, not a full Kerr null-geodesic integrator and not GRMHD. It demonstrates the embarrassingly parallel structure of per-pixel ray calculations and produces lens-like warping plus a stylised emission ring. The opening exploded-layer scene is an explanatory visualisation of source plane, foreground dust, lens and observer image plane; its animated curved paths are illustrative and are not individual numerical geodesics. The subsequent 2-D frame is the output of `BlackHoleDemo.lens()`. For a research-accurate flagship, replace that function with a validated Schwarzschild/Kerr geodesic integrator while keeping the same frame/output interface.
+The demo has two separate scientific views. **2-D observer image** is an exhibition-grade image-space gravitational lens mapping: every output pixel is mapped back to the source sky in parallel, producing lens-like warping and a stylised emission ring. **3-D ray space** numerically advances photon directions through a three-dimensional point-mass deflection field, renormalising the direction after each step and adding a small signed spin-like transverse term. The displayed paths therefore come from the integrator rather than decorative Bezier curves, and rays can either escape to the source plane or cross the capture radius.
+
+This is still a weak-field educational model, not a full Schwarzschild/Kerr null-geodesic integrator and not GRMHD. The spin term is qualitative rather than a validated frame-dragging solution. For a research-accurate flagship, replace `integrate_rays()` and `lens()` with a validated relativistic ray tracer while keeping the two-mode frame/output interface.
 
 ## PBH
 
@@ -61,6 +63,10 @@ This is a restricted N-body encounter: tracer stars feel two softened (Plummer)
 galaxy potentials while the galaxy centres mutually accelerate. Tracers do not
 contribute self-gravity, and there is no dynamical friction, so the orbit does
 not decay the way a real merger's does.
+
+Positions and velocities are advanced with the same kick-drift-kick leapfrog
+scheme on NumPy and CuPy. CPU workers operate only on disjoint tracer slices;
+that execution detail does not change the force model or initial conditions.
 
 The default preset uses published Local Group values: M_MW and M_M31 of about
 1.5x10^12 solar masses each, a separation of 770 kpc, a radial approach
@@ -157,6 +163,40 @@ controls provide an intuitive operating-space narrative, but the coefficient
 mapping is illustrative and must not be used to infer fusion performance. The
 reveal is nevertheless genuine computation: every tile integrates a separate
 field with different control values.
+
+The luminous moving particles are **passive tracers**, not kinetic plasma
+particles and not additional degrees of freedom in the field solve. Their
+toroidal and poloidal drift is sampled from local phase gradients and rotated
+amplitude gradients of the evolved field. They make transport and changing
+flow direction visible without feeding back into the simulation. The short
+trails are trajectory history; camera rotation is deliberately slower so the
+field-driven motion remains distinguishable from the changing viewpoint.
+
+Completed fusion runs also write `fusion_view.json`, a compact copy of the
+final field texture and tracer histories used by the browser's rotatable view.
+The optional magnetic view draws nested helical curves and the magnetic axis
+to explain toroidal confinement. Those curves respond to the selected field
+strength through an illustrative pitch mapping, but they are **not** magnetic
+field lines calculated by the complex-amplitude solver and must not be
+presented as a solved Grad--Shafranov equilibrium or safety-factor profile.
+
+## AI Plasma Guardian
+
+This is a **research-inspired reduced control environment**, not a tokamak
+equilibrium, transport, or tearing-mode solver. Its six state variables are
+radial and vertical position/velocity plus dimensionless pressure and
+tearing-risk proxies. Three aggregate actuator outputs represent radial,
+vertical and shaping coil banks. Open-loop positive feedback makes the
+reference trajectory approach the vessel boundary; a small PyTorch MLP is
+optimized by back-propagating through batches of those virtual trajectories to
+minimize displacement, risk, velocity, and coil effort.
+
+The demo genuinely trains a neural feedback policy and uses its learned weights
+to draw the policy graph and its actions to drive the coloured coils. It must
+not be presented as a controller validated on experimental tokamak data, an RL
+controller, or a prediction of a physical disruption. It is a visual
+explanation of the diagnostic → policy → magnetic-actuator loop demonstrated
+in modern plasma-control research.
 
 ## Storm Factory / weather ensemble
 

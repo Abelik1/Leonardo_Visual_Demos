@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from leonardo_demos.colors import palette
-from leonardo_demos.crystal_growth import build_crystal, generate, render_window
+from leonardo_demos.crystal_growth import build_crystal, generate, generate_stable, render_window
 
 
 def _structure(im):
@@ -30,6 +30,41 @@ class DeepZoomTests(unittest.TestCase):
         fine = generate(0.18, 0.0, self.span / 5000, size_px=200, max_segments=4000)
         self.assertLess(fine['w'].min(), coarse['w'].min(),
                         'finer window produced no thinner branches')
+
+    def test_jittered_adjacent_tiles_share_branch_geometry(self):
+        """Noise must be tied to a branch path, never tile traversal order."""
+        options=dict(size_px=220, mode='seaweed', seed=7, max_segments=20_000)
+        left=generate(-.12,.05,.24,**options)
+        right=generate(.12,.05,.24,**options)
+
+        def signatures(geometry):
+            return {tuple(round(float(value),10) for value in row)
+                    for row in zip(geometry['x0'],geometry['y0'],geometry['x1'],
+                                   geometry['y1'],geometry['w'])}
+
+        # Windows meet at x=0, but both must contain the same substantial set
+        # of branches whose subtrees cross that boundary.
+        self.assertGreater(len(signatures(left)&signatures(right)),300)
+
+    def test_stable_grammar_only_adds_detail_between_levels(self):
+        """A LOD transition must never replace its coarser crystal.
+
+        The old viewport-local priority queue could choose a different set of
+        branches at each zoom.  The stable grammar's depth d must be an exact
+        subset of depth d+1, so colour blending can only fade in a residual.
+        """
+        options=dict(cx=.11,cy=-.04,span=.34,size_px=240,mode='coral',seed=7,
+                     max_depth=12)
+        coarse=generate_stable(**options,detail_depth=7)
+        fine=generate_stable(**options,detail_depth=8)
+
+        def signatures(geometry):
+            return {tuple(round(float(value),12) for value in row)
+                    for row in zip(geometry['x0'],geometry['y0'],geometry['x1'],
+                                   geometry['y1'],geometry['w'])}
+
+        self.assertTrue(signatures(coarse) <= signatures(fine))
+        self.assertGreater(len(signatures(fine)-signatures(coarse)),0)
 
     def test_rendered_deep_window_is_not_blank(self):
         """A regression guard for two separate blanking bugs.

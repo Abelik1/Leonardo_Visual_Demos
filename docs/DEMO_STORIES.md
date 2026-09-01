@@ -68,11 +68,23 @@ As the wall appears: "That was only the best network. We were training many diff
 
 **Opening:** "A fusion plasma is hotter than the centre of the Sun, so no material wall can hold it. Magnetic fields have to make the bottle."
 
-As defects appear: "Heating feeds the plasma, nonlinear waves interact, and coherent motion can turn into turbulent structure."
+As the luminous trails move: "These are passive tracers following drift derived from the simulated wave field. Heating feeds the plasma, nonlinear waves interact, and coherent motion can turn into turbulent structure."
 
 **Reveal:** "A reactor is not designed from one beautiful plasma. We compute an operating map — magnetic field against heating power — and search for regions that remain controllable."
 
-## 10. Storm Factory
+**Interactive view:** "Drag the plasma to inspect the torus from any direction. Switch to Magnetic field to see the helical geometry that explains how toroidal and poloidal field components wrap around the bottle. This geometry is explanatory; the reduced wave model is not solving the reactor's magnetic equilibrium."
+
+## 10. AI Plasma Guardian
+
+**Opening:** "In a real tokamak, the plasma has to stay away from the wall. A small instability can grow faster than a human can react."
+
+As the red outline grows: "The red line is an uncontrolled reference. The bright plasma receives noisy diagnostics: position, velocity, pressure and a tearing-risk proxy."
+
+As the coils respond: "A neural policy turns those readings into three magnetic-coil commands. It has learned that response by testing batches of virtual plasma shots in parallel."
+
+**Method note:** "This is a reduced control environment, not a prediction of a reactor disruption. The graph shows actual learned policy weights and the coloured coils show its actual output."
+
+## 11. Storm Factory
 
 **Opening:** "This globe starts from our best estimate of the atmosphere now. The clock is racing five days ahead."
 
@@ -80,7 +92,7 @@ As the storm moves: "Vorticity carries rotating weather systems while moisture i
 
 **Reveal:** "The observations are never exact. Each globe begins with a slightly different but plausible atmosphere. A useful forecast needs the whole ensemble before the real weather arrives."
 
-## 11. Molecular Machine
+## 12. Molecular Machine
 
 **Opening:** "At this scale, a molecule never sits still. Every particle pulls on its neighbours while temperature shakes the entire structure."
 

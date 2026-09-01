@@ -9,7 +9,7 @@ from PIL import Image
 
 from fastapi import HTTPException
 
-from app import RunReq, save_target_image, start
+from app import RunReq, save_target_image, specs, start
 from leonardo_demos.base import RunContext
 from leonardo_demos.demos.neural_wall import NeuralWallDemo
 from run_demo import run
@@ -24,11 +24,34 @@ class InputValidationTests(unittest.TestCase):
         with self.assertRaises(HTTPException):
             start('reaction_diffusion', RunReq(profile='invalid'))
 
+    def test_api_rejects_gpu_for_cpu_only_demo(self):
+        with self.assertRaises(HTTPException):
+            start('crystal',RunReq(backend='gpu'))
+
     def test_api_rejects_unknown_and_out_of_range_parameters(self):
         with self.assertRaises(HTTPException):
             start('reaction_diffusion', RunReq(params={'unexpected': 1}))
         with self.assertRaises(HTTPException):
             start('reaction_diffusion', RunReq(params={'feed': 1.0}))
+
+    def test_api_rejects_invalid_parallel_and_obstacle_grids(self):
+        with self.assertRaises(HTTPException):
+            start('cosmic_web', RunReq(parallel_count=10))
+        with self.assertRaises(HTTPException):
+            start('fluid', RunReq(obstacle_grid=[[0,1],[1,0]]))
+
+    def test_api_publishes_and_validates_galaxy_solvers(self):
+        capability=specs()['capabilities']['galaxy_collision']
+        self.assertEqual(capability['default_method'],'leapfrog')
+        self.assertIn('murb_kinematic',capability['methods'])
+        self.assertIn('rk4',capability['method_labels'])
+        with self.assertRaisesRegex(HTTPException,'supports these solvers'):
+            start('galaxy_collision',RunReq(method='not_a_solver'))
+
+    def test_collision_numerical_step_request_is_bounded(self):
+        self.assertEqual(RunReq(numerical_substeps=12).numerical_substeps,12)
+        with self.assertRaises(ValueError):
+            RunReq(numerical_substeps=0)
 
     def test_neural_difficulty_changes_the_training_target(self):
         demo = NeuralWallDemo(None, {})

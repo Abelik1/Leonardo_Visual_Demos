@@ -18,12 +18,14 @@ def choose_backend(requested: str = "auto"):
     if requested in {"cupy", "cuda", "gpu", "auto"} or hybrid:
         try:
             import cupy as cp
-            _ = cp.cuda.runtime.getDeviceCount()
-            if requested != "auto" or cp.cuda.runtime.getDeviceCount() > 0:
+            device_count = cp.cuda.runtime.getDeviceCount()
+            if device_count > 0:
                 return cp, "cupy + CPU frame workers" if hybrid else "cupy"
-        except Exception:
-            if requested not in {"auto"}:
-                raise
+            if requested != "auto":
+                raise RuntimeError("GPU requested but CuPy reports no visible CUDA devices")
+        except Exception as exc:
+            if requested != "auto":
+                raise RuntimeError(f"GPU requested but CUDA/CuPy is unavailable: {exc}") from exc
     return np, "numpy"
 
 

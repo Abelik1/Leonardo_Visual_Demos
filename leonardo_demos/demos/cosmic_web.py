@@ -25,8 +25,9 @@ def mean_molecular_weight(helium_mass_fraction):
 
 
 class CosmicWebDemo(Demo):
+    timing_methods={"init":"initialization","step":"simulation","render_density":"render"}
     id="cosmic_web"; title="Cosmic-web formation"
-    def init(self,Np,seed,n=None,ns=-1.0,kmin=3.0,amplitude=None):
+    def init(self,Np,seed,n=None,ns=-1.0,kmin=3.0,amplitude=None,warm_dark_matter=False):
         """Zel'dovich initial conditions from a power-law power spectrum.
 
         Displacing a particle grid by small *random* jitter, as this demo did
@@ -48,6 +49,12 @@ class CosmicWebDemo(Demo):
         k2=KX*KX+KY*KY; k2[0,0]=1.0
         k=np.sqrt(k2)
         power=np.where(k>=kmin,k**ns,0.0); power[0,0]=0.0
+        if warm_dark_matter:
+            # Free-streaming suppresses short-wavelength primordial power.
+            # This is a selectable qualitative WDM transfer function, not a
+            # calibrated particle-mass constraint.
+            cutoff=float(self.settings.get('warm_dm_cutoff',18.0))
+            power*=np.exp(-(k/cutoff)**2)
         dk=wk*np.sqrt(power)
         # Zel'dovich displacement field: psi_k = i k / k^2 * delta_k
         psix=np.fft.irfft2(1j*KX/k2*dk,s=(m,m)).real
@@ -96,7 +103,7 @@ class CosmicWebDemo(Demo):
     def sample_force(self,pos,fx,fy):
         xp=self.ctx.xp; n=fx.shape[0]; ix=(pos[:,0]*n).astype(xp.int32)%n; iy=(pos[:,1]*n).astype(xp.int32)%n
         return xp.stack([fx[iy,ix],fy[iy,ix]],axis=1)
-    def step(self,pos,vel,n,g,steps=1,jeans=0.0):
+    def step(self,pos,vel,n,g,steps=1,jeans=0.0,expanding=True,dark_energy=False):
         """Particle-mesh integration on an expanding background.
 
         Comoving coordinates with peculiar velocity v = a dx/dt, matter
@@ -111,8 +118,12 @@ class CosmicWebDemo(Demo):
         xp=self.ctx.xp; dt=.018
         for _ in range(steps):
             self.time+=dt
-            a=(self.time/self.t0)**(2.0/3.0)
-            H=(2.0/3.0)/self.time
+            if expanding:
+                lambda_rate=float(self.settings.get('dark_energy_rate',.035)) if dark_energy else 0.0
+                a=(self.time/self.t0)**(2.0/3.0)*math.exp(lambda_rate*(self.time-self.t0))
+                H=(2.0/3.0)/self.time+lambda_rate
+            else:
+                a=1.0; H=0.0
             rho=self.density(pos,n)
             fx,fy=self.force_grid(rho,g,jeans)
             acc=self.sample_force(pos,fx,fy)/a
@@ -146,37 +157,38 @@ class CosmicWebDemo(Demo):
         total=self.budget(); done=0
         seed=int(self.ctx.params.get('seed',42)); g=float(self.ctx.params.get('gravity',1.0))
         Y=float(self.ctx.params.get('helium',PRIMORDIAL_HELIUM))
+        expanding=bool(round(self.ctx.params.get('expanding_space',1)))
+        dark_energy=bool(round(self.ctx.params.get('dark_energy',1))) and expanding
+        warm_dm=bool(round(self.ctx.params.get('warm_dark_matter',0)))
         mu=mean_molecular_weight(Y); jeans=self.jeans_scale(mu,n)
         self.t0=float(self.settings.get('t0',1.0)); self.time=self.t0
-        pos,vel=self.init(Np,seed)
+        pos,vel=self.init(Np,seed,warm_dark_matter=warm_dm)
         for i in range(self.ctx.frames):
             step_target=int(round(total*(i+1)/self.ctx.frames))
-            pos,vel,rho=self.step(pos,vel,n,g,max(1,step_target-done),jeans); done=step_target
+            pos,vel,rho=self.step(pos,vel,n,g,max(1,step_target-done),jeans,expanding,dark_energy); done=step_target
             im=self.render_density(rho)
             im=add_title(im,"Cosmic-web formation",f"particle–mesh gravity · {Np:,} particles · {n}² mesh · seed {seed}")
-            d=ImageDraw.Draw(im,'RGBA')
-            d.text((28,116),"Tiny initial differences grow into clusters, filaments and voids.",font=font(17,True),fill=(220,238,255))
-            d.rounded_rectangle((26,142,470,262),radius=16,fill=(4,9,22,205))
-            d.text((44,156),"GAS COMPOSITION (by mass)",font=font(14,True),fill=(150,226,255))
-            d.text((44,180),f"hydrogen  {100*(1-Y):.0f}%   ·   A = {M_HYDROGEN:.3f}",font=font(15,True),fill=(206,224,248))
-            d.text((44,202),f"helium    {100*Y:.0f}%   ·   A = {M_HELIUM:.3f}",font=font(15,True),fill=(255,206,150))
-            d.text((44,226),f"mean molecular weight µ = {mu:.3f}",font=font(15,True),fill=(120,236,255))
-            d.text((44,244),f"Jeans smoothing ≈ {jeans*n:.2f} cells",font=font(13),fill=(150,170,200))
             add_progress(im,(i+1)/self.ctx.frames,"NEARLY UNIFORM","EMERGENT STRUCTURE")
-            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"µ={mu:.3f}")
+            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"µ={mu:.3f}",{
+                "particles":f"{Np:,}","mesh":f"{n} × {n}","gravity":f"{g:.2f}",
+                "hydrogen":f"{100*(1-Y):.0f}%","helium":f"{100*Y:.0f}%",
+                "expanding space":"on" if expanding else "off","dark energy":"on" if dark_energy else "off",
+                "dark matter":"warm" if warm_dm else "cold",
+                "mean molecular weight":f"{mu:.3f}","solver step":f"{done:,} / {total:,}"})
         # Reveal: the same initial universe run at different H/He mixes, which
         # is a real composition sweep rather than sixteen random seeds.
-        side=4; ims=[]; labels=[]
+        ens=int(self.ctx.params.get('_parallel_count',self.settings.get('ensemble',16)))
+        side=max(2,int(math.ceil(math.sqrt(ens)))); ims=[]; labels=[]
         m=max(64,n//2); pcount=max(3000,min(9000,Np//4))
-        for j in range(side*side):
-            Yj=j/(side*side-1)
+        for j in range(ens):
+            Yj=j/max(1,ens-1)
             muj=mean_molecular_weight(Yj); jj=self.jeans_scale(muj,m)
-            p_,v_=self.init(pcount,seed); r=None
+            p_,v_=self.init(pcount,seed,warm_dark_matter=warm_dm); r=None
             self.time=self.t0
-            p_,v_,r=self.step(p_,v_,m,g,int(self.settings.get('sweep_steps',600)),jj)
+            p_,v_,r=self.step(p_,v_,m,g,int(self.settings.get('sweep_steps',600)),jj,expanding,dark_energy)
             ims.append(self.render_density(r,(260,146)))
             labels.append(f"He {100*Yj:.0f}%  µ{muj:.2f}")
-        rev=mosaic(ims,side,title="One universe, sixteen gas compositions",
+        rev=mosaic(ims,side,title=f"One universe, {ens} gas compositions",
                    subtitle="Pure hydrogen (µ=1.00) through pure helium (µ=4.00). Heavier gas, finer structure.",
                    labels=labels,label_fill=(190,226,255))
         rp=self.ctx.run_dir/'reveal.jpg'; self.ctx.save_frame(rev,rp); self.ctx.finish(rp)

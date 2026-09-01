@@ -7,6 +7,7 @@ from ..backend import to_numpy
 from ..render import array_image, add_title, add_progress, save_frame, mosaic, font
 
 class ReactionDiffusionDemo(Demo):
+    timing_methods={"initialise":"initialization","step":"simulation"}
     id="reaction_diffusion"; title="Living mathematics"
     # The viewer frame is 16:9. Simulating a square grid and stretching it to
     # fill the frame turned every circular Turing spot into an ellipse, so the
@@ -61,11 +62,10 @@ class ReactionDiffusionDemo(Demo):
             field=to_numpy(V)
             im=array_image(field,'plasma',size=(1280,720))
             im=add_title(im,"Living mathematics",f"Gray–Scott reaction diffusion · F={F:.4f} · K={K:.4f} · {nx}×{ny} cells · {self.ctx.backend_name}")
-            d=ImageDraw.Draw(im,'RGBA')
-            d.rounded_rectangle((26,112,335,166),radius=14,fill=(4,8,20,180)); d.text((44,126),"Simple local rules → global structure",font=font(17,True),fill='white')
-            d.rounded_rectangle((26,176,268,214),radius=12,fill=(4,8,20,160)); d.text((42,187),f"solver step {done:,}",font=font(15,True),fill=(150,226,255))
             add_progress(im,(i+1)/frames,"DRAW / PERTURB","EMERGENT PATTERN")
-            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"Evolving reaction field · step {done:,}")
+            self.ctx.save_frame(im,self.ctx.frame_path(i)); self.ctx.write_status(i,f"Evolving reaction field · step {done:,}",{
+                "solver step":f"{done:,} / {total:,}","feed F":f"{F:.4f}","kill K":f"{K:.4f}",
+                "grid":f"{nx} × {ny}","backend":self.ctx.backend_name})
         # True parameter sweep (small independent simulations, matured far
         # enough that neighbouring F/K values are visually distinguishable).
         ens=int(self.settings.get('ensemble',25)); side=max(2,int(math.sqrt(ens)))
@@ -81,5 +81,4 @@ class ReactionDiffusionDemo(Demo):
             u,v=self.step(u,v,fj,kj,sweep_steps)
             ims.append(array_image(to_numpy(v),'plasma',size=(260,146)))
         rev=mosaic(ims,side,title="Actually… we evolved many mathematical worlds")
-        d=ImageDraw.Draw(rev,'RGBA'); d.text((900,28),f"{side*side} parameter sets",font=font(17,True),fill=(120,236,255))
         rp=self.ctx.run_dir/'reveal.jpg'; self.ctx.save_frame(rev,rp); self.ctx.finish(rp)

@@ -9,7 +9,10 @@ distances, velocities, and a camera that follows the evolving system.
 
 - Solver and renderer: `leonardo_demos/demos/galaxy_collision.py`
 - Optional reduced M31 catalogue: `data/m31_catalog_reduced.npz`
-- Parameters: preset, impact, speed, tilt
+- Scientific parameters: preset, impact, speed, tilt, Milky Way mass, and
+  Andromeda mass
+- Editable profile settings: tracer-particle count, solver substeps, simulated
+  Gyr span, and reveal ensemble size
 - Reveal: a transverse-velocity uncertainty sweep
 
 ## Scientific boundary

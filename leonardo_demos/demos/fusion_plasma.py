@@ -332,21 +332,21 @@ class FusionPlasmaDemo(Demo):
         # Retain one final-state file so older viewers can still open new runs.
         self.write_interactive_view(real, imag, trails, b, heating, density)
 
-        ens = max(4, int(self.settings.get("ensemble", 16)))
-        side = max(2, int(math.sqrt(ens)))
+        ens = max(1, int(self.ctx.params.get("_parallel_count", self.settings.get("ensemble", 16))))
+        side = max(1, int(math.ceil(math.sqrt(ens))))
         sweep_n = int(self.settings.get("sweep_n", max(36, ny // 2)))
         my, mx = self.grid_shape(sweep_n)
         sweep_steps = int(self.settings.get("sweep_steps", max(160, total // 3)))
         tiles, labels = [], []
         b_values = np.linspace(2.5, 7.5, side)
         h_values = np.linspace(10.0, 45.0, side)
-        for row, hj in enumerate(h_values):
-            for col, bj in enumerate(b_values):
-                rr, ii = self.initialise(my, mx, seed=40 + row * side + col)
-                rr, ii = self.step(rr, ii, float(bj), float(hj), density, sweep_steps)
-                rn, inn = to_numpy(rr), to_numpy(ii)
-                tiles.append(self.torus_image(rn, inn, size=(260, 146), angle=0.35, compact=True))
-                labels.append(f"B {bj:.1f}T · {hj:.0f}MW")
+        for j in range(ens):
+            row,col=divmod(j,side); hj=h_values[row]; bj=b_values[col]
+            rr, ii = self.initialise(my, mx, seed=40 + j)
+            rr, ii = self.step(rr, ii, float(bj), float(hj), density, sweep_steps)
+            rn, inn = to_numpy(rr), to_numpy(ii)
+            tiles.append(self.torus_image(rn, inn, size=(260, 146), angle=0.35, compact=True))
+            labels.append(f"B {bj:.1f}T · {hj:.0f}MW")
         reveal = mosaic(
             tiles,
             side,

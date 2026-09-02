@@ -2,10 +2,10 @@
   "benchmark": {
     "black_hole": {"width": 640, "height": 360, "ensemble": 9},
     "pbh": {"radial_points": 180, "ensemble": 16},
-    "fluid": {"nx": 192, "ny": 108, "tracers": 500, "trail": 10, "tracer_boost": 9.0, "total_steps": 500},
-    "cosmic_web": {"grid": 96, "particles": 20000, "total_steps": 220, "sweep_steps": 160, "jeans_ref": 2.4, "ic_amplitude": 0.9, "ic_velocity": 0.55},
-    "galaxy_collision": {"particles": 12000, "substeps": 4, "span_gyr": 7.5},
-    "galaxy_collision_3d": {"particles": 384, "substeps": 2, "span_gyr": 7.5, "softening": 4.0, "force_tile": 96},
+    "fluid": {"nx": 192, "ny": 108, "steps_per_frame": 4, "tracers": 500, "trail": 10, "tracer_boost": 9.0, "total_steps": 500},
+    "cosmic_web": {"grid": 96, "particles": 20000, "total_steps": 220, "sweep_steps": 160, "jeans_ref": 2.4, "ic_amplitude": 0.9, "ic_velocity": 0.55, "t0": 1.0, "dark_energy_rate": 0.035, "warm_dm_cutoff": 18.0},
+    "galaxy_collision": {"particles": 12000, "substeps": 4, "span_gyr": 7.5, "ensemble": 9},
+    "galaxy_collision_3d": {"particles": 384, "substeps": 2, "span_gyr": 7.5, "force_tile": 96, "max_step": 0.025},
     "reaction_diffusion": {"n": 128, "total_steps": 1000, "sweep_steps": 450, "ensemble": 9},
     "crystal": {"depth": 4, "ensemble": 9, "zoom_levels": 2, "zoom_depth": 6, "zoom_tile": 192, "zoom_max_level": 20, "zoom_detail_base": 6, "zoom_detail_max": 12},
     "neural_wall": {"networks": 16, "tile": 32, "total_steps": 160},
@@ -41,18 +41,22 @@
       "jeans_ref": 2.4,
       "ic_amplitude": 0.9,
       "ic_velocity": 0.55
+      ,"t0": 1.0,
+      "dark_energy_rate": 0.035,
+      "warm_dm_cutoff": 18.0
     },
     "galaxy_collision": {
       "particles": 14000,
       "substeps": 6,
       "span_gyr": 7.5
+      ,"ensemble": 16
     },
     "galaxy_collision_3d": {
       "particles": 600,
       "substeps": 3,
       "span_gyr": 7.5,
-      "softening": 4.0,
-      "force_tile": 128
+      "force_tile": 128,
+      "max_step": 0.025
     },
     "reaction_diffusion": {
       "n": 192,
@@ -132,18 +136,22 @@
       "jeans_ref": 2.4,
       "ic_amplitude": 0.9,
       "ic_velocity": 0.55
+      ,"t0": 1.0,
+      "dark_energy_rate": 0.035,
+      "warm_dm_cutoff": 18.0
     },
     "galaxy_collision": {
       "particles": 60000,
       "substeps": 8,
       "span_gyr": 7.5
+      ,"ensemble": 36
     },
     "galaxy_collision_3d": {
       "particles": 1800,
       "substeps": 4,
       "span_gyr": 7.5,
-      "softening": 3.5,
-      "force_tile": 160
+      "force_tile": 160,
+      "max_step": 0.025
     },
     "reaction_diffusion": {
       "n": 320,
@@ -223,18 +231,22 @@
       "jeans_ref": 2.4,
       "ic_amplitude": 0.9,
       "ic_velocity": 0.55
+      ,"t0": 1.0,
+      "dark_energy_rate": 0.035,
+      "warm_dm_cutoff": 18.0
     },
     "galaxy_collision": {
       "particles": 250000,
       "substeps": 10,
       "span_gyr": 7.5
+      ,"ensemble": 64
     },
     "galaxy_collision_3d": {
       "particles": 6000,
       "substeps": 6,
       "span_gyr": 7.5,
-      "softening": 3.0,
-      "force_tile": 192
+      "force_tile": 192,
+      "max_step": 0.025
     },
     "reaction_diffusion": {
       "n": 512,

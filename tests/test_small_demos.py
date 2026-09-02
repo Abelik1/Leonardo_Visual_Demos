@@ -16,13 +16,16 @@ class SmallDemoTests(unittest.TestCase):
             c=RunContext(Path(t),'reaction_diffusion','local',2,{'feed':.0367,'kill':.0649},'numpy'); ReactionDiffusionDemo(c,{'n':48,'total_steps':40,'sweep_steps':20,'ensemble':4}).run(); self.assertTrue((Path(t)/'frames/frame_0001.jpg').exists()); self.assertEqual(json.loads((Path(t)/'meta.json').read_text())['status'],'complete')
     def test_blackhole(self):
         with tempfile.TemporaryDirectory() as t:
-            c=RunContext(Path(t),'black_hole','local',2,{'mass':1.2,'spin':.2},'numpy'); BlackHoleDemo(c,{'width':120,'height':68,'ensemble':4}).run()
+            c=RunContext(Path(t),'black_hole','local',2,{'mass':1.2,'spin':.2,'lens_x':.3,'lens_y':-.2,'lens_count':2,'lens_separation':.45,'lens_angle':35},'numpy'); BlackHoleDemo(c,{'width':120,'height':68,'ensemble':1}).run()
             self.assertTrue((Path(t)/'reveal.jpg').exists())
             self.assertTrue((Path(t)/'frames/frame_0001.jpg').exists())
             self.assertTrue((Path(t)/'modes/3d/frame_0001.jpg').exists())
             meta=json.loads((Path(t)/'meta.json').read_text())
-            self.assertEqual(meta['default_view_mode'],'3d')
-            self.assertEqual(meta['view_modes'][0]['folder'],'modes/3d')
+            self.assertEqual(meta['default_view_mode'],'frames')
+            self.assertEqual(meta['view_modes'][1]['folder'],'modes/3d')
+            self.assertEqual(meta['source_plane']['name'],'Hubble Deep Field (PIA12110)')
+            self.assertEqual(len(meta['lens_wells']),2)
+            self.assertNotEqual((Path(t)/'frames/frame_0000.jpg').read_bytes(),(Path(t)/'frames/frame_0001.jpg').read_bytes())
     def test_crystal(self):
         with tempfile.TemporaryDirectory() as t:
             c=RunContext(Path(t),'crystal','local',2,{'undercooling':.75,'anisotropy':.055},'numpy'); CrystalDemo(c,{'depth':3,'ensemble':4,'zoom_levels':1,'zoom_depth':4,'zoom_tile':64}).run(); self.assertTrue((Path(t)/'frames/frame_0001.jpg').exists()); self.assertEqual(json.loads((Path(t)/'meta.json').read_text())['status'],'complete')

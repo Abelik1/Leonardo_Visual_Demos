@@ -285,11 +285,11 @@ class WeatherEnsembleDemo(Demo):
                 "relative vorticity":f"{strength:+.3f}"})
 
         ens = max(4, int(self.settings.get("ensemble", 16)))
-        side = max(2, int(math.sqrt(ens)))
+        side = max(2, int(math.ceil(math.sqrt(ens))))
         sy, sx = self.grid_shape(int(self.settings.get("sweep_n", max(36, ny // 2))))
         sweep_steps = int(self.settings.get("sweep_steps", max(160, total // 2)))
         tiles, labels = [], []
-        for j in range(side * side):
+        for j in range(ens):
             self.weather_time = 0.0
             # The perturbation amplitude is tied to the visitor's uncertainty
             # control, while the seed represents a different admissible set of

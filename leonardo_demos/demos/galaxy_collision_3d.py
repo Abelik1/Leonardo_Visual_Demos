@@ -169,15 +169,16 @@ class GalaxyCollision3DDemo(Demo):
         velocities = velocities @ orientation.T
         return positions, velocities, masses, component, catalogue_flag, colours
 
-    def setup(self, count, impact, speed, disc_tilt):
+    def setup(self, count, impact, speed, disc_tilt,
+              milky_way_mass=MW_M31["m1"], andromeda_mass=MW_M31["m2"]):
         rng = np.random.default_rng(20260901)
         mw_xyz, m31_xy, m31_colour, metadata = self.observations()
         n1 = count // 2
         n2 = count - n1
-        mw = self.galaxy(n1, MW_M31["m1"], 9.0, "mw", np.eye(3), rng,
+        mw = self.galaxy(n1, milky_way_mass, 9.0, "mw", np.eye(3), rng,
                          mw_xyz, m31_xy, m31_colour)
         m31_orientation = self.rotation_z(math.radians(28)) @ self.rotation_x(math.radians(disc_tilt))
-        m31 = self.galaxy(n2, MW_M31["m2"], 12.0, "m31", m31_orientation, rng,
+        m31 = self.galaxy(n2, andromeda_mass, 12.0, "m31", m31_orientation, rng,
                           mw_xyz, m31_xy, m31_colour)
         separation = MW_M31["separation"]
         offset = 80.0 * float(impact)
@@ -185,8 +186,8 @@ class GalaxyCollision3DDemo(Demo):
         c2 = np.array((separation * .5, offset * .5, 0.0))
         relative = np.array((MW_M31["v_radial"] * float(speed),
                              MW_M31["v_transverse"] + 42.0 * float(impact), 0.0))
-        mu1 = MW_M31["m2"] / (MW_M31["m1"] + MW_M31["m2"])
-        mu2 = MW_M31["m1"] / (MW_M31["m1"] + MW_M31["m2"])
+        mu1 = andromeda_mass / (milky_way_mass + andromeda_mass)
+        mu2 = milky_way_mass / (milky_way_mass + andromeda_mass)
         pos = np.vstack((mw[0] + c1, m31[0] + c2))
         vel = np.vstack((mw[1] - relative * mu1, m31[1] + relative * mu2))
         mass = np.concatenate((mw[2], m31[2]))
@@ -352,8 +353,10 @@ class GalaxyCollision3DDemo(Demo):
         speed = float(self.ctx.params.get("speed", 1.0))
         disc_tilt = float(self.ctx.params.get("disc_tilt", 35.0))
         softening = float(self.ctx.params.get("softening", self.settings.get("softening", 4.0)))
+        milky_way_mass = float(self.ctx.params.get("milky_way_mass", 1.5)) * 1e12
+        andromeda_mass = float(self.ctx.params.get("andromeda_mass", 1.5)) * 1e12
         positions, velocities, masses, origin, component, catalogue, colour, metadata = self.setup(
-            count, impact, speed, disc_tilt)
+            count, impact, speed, disc_tilt, milky_way_mass, andromeda_mass)
         span_gyr = float(self.settings.get("span_gyr", 7.5))
         total_time = span_gyr / TIME_UNIT_GYR
         requested_substeps = max(1, int(self.settings.get("substeps", 3)))

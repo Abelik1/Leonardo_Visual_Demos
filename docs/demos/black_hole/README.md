@@ -8,10 +8,18 @@ observer image and a fixed-camera 3-D view of numerically advanced photon paths.
 ## Implementation map
 
 - Solver and renderers: `leonardo_demos/demos/black_hole.py`
-- Parameters: `mass`, `spin`, `disk`
+- Parameters: `mass`, `spin`, `lens_x`, `lens_y`, `lens_count`,
+  `lens_separation`, `lens_angle`, `disk`
 - Main output: `frames/` (2-D observer image)
 - Alternative output: `modes/3d/` (ray-space animation)
 - Viewer mode controls: `web/app.js`
+
+## Source data
+
+Both views use the same locally packaged crop of NASA's Hubble Deep Field
+image, PIA12110. The image source and credit are preserved in each run's
+metadata. The 2-D animation pans across that recorded source plane; the 3-D
+view maps the same crop onto its background plane.
 
 ## Scientific boundary
 
@@ -22,5 +30,6 @@ spin term; it is not a Kerr null-geodesic solver or GRMHD calculation.
 ## Extension points
 
 Replace `lens()` and `integrate_rays()` together for a validated relativistic
-backend. Preserve both output modes and publish method details through metadata
-and HTML layers rather than drawing them into frames.
+backend. Preserve both output modes, their shared source data, and publish
+method details through metadata and HTML layers rather than drawing them into
+frames.

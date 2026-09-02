@@ -211,25 +211,25 @@ class MolecularDynamicsDemo(Demo):
                 "close contacts":f"{contacts:,}","integration step":f"{done:,} / {total:,}","pair evaluations":f"{pair_evals:,}"})
 
         ens = max(4, int(self.settings.get("ensemble", 16)))
-        side = max(2, int(math.sqrt(ens)))
+        side = max(2, int(math.ceil(math.sqrt(ens))))
         sweep_particles = int(self.settings.get("sweep_particles", max(28, n // 2)))
         sweep_steps = int(self.settings.get("sweep_steps", max(220, total // 2)))
         temperatures = np.linspace(270, 390, side)
         attractions = np.linspace(0.55, 1.65, side)
         tiles, labels = [], []
-        for row, temp in enumerate(temperatures):
-            for col, attr in enumerate(attractions):
-                pj, vj, tj = self.initialise(
-                    sweep_particles,
-                    seed=70 + row * side + col,
-                    sequence=(sequence + row + col) % 4,
-                    temperature=float(temp),
-                )
-                pj, vj = self.step(pj, vj, tj, float(temp), float(attr), solvent, sweep_steps)
-                pn, tn = to_numpy(pj), to_numpy(tj)
-                rg, _ = self.diagnostics(pn)
-                tiles.append(self.molecule_image(pn, tn, size=(260, 146), angle=0.45, compact=True))
-                labels.append(f"{temp:.0f}K · ε{attr:.2f} · Rg{rg:.2f}")
+        for j in range(ens):
+            row,col=divmod(j,side); temp=temperatures[row]; attr=attractions[col]
+            pj, vj, tj = self.initialise(
+                sweep_particles,
+                seed=70 + j,
+                sequence=(sequence + row + col) % 4,
+                temperature=float(temp),
+            )
+            pj, vj = self.step(pj, vj, tj, float(temp), float(attr), solvent, sweep_steps)
+            pn, tn = to_numpy(pj), to_numpy(tj)
+            rg, _ = self.diagnostics(pn)
+            tiles.append(self.molecule_image(pn, tn, size=(260, 146), angle=0.45, compact=True))
+            labels.append(f"{temp:.0f}K · ε{attr:.2f} · Rg{rg:.2f}")
         reveal = mosaic(
             tiles,
             side,

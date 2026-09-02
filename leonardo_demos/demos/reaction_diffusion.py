@@ -68,10 +68,10 @@ class ReactionDiffusionDemo(Demo):
                 "grid":f"{nx} × {ny}","backend":self.ctx.backend_name})
         # True parameter sweep (small independent simulations, matured far
         # enough that neighbouring F/K values are visually distinguishable).
-        ens=int(self.settings.get('ensemble',25)); side=max(2,int(math.sqrt(ens)))
+        ens=int(self.settings.get('ensemble',25)); side=max(2,int(math.ceil(math.sqrt(ens))))
         sweep_steps=int(self.settings.get('sweep_steps',max(2500,total//4)))
         my,mx=self.grid_shape(max(72,ny//3)); ims=[]
-        for j in range(side*side):
+        for j in range(ens):
             # Sweep spans labyrinth -> spots -> extinction. The kill span is
             # kept narrow: wider and the top rows are simply blank, because the
             # pattern cannot sustain itself there.

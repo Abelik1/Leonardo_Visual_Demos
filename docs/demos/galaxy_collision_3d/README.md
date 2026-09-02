@@ -9,7 +9,10 @@ dark-halo super-particle contributes to the gravitational acceleration.
 
 - Solver and JPEG renderer: `leonardo_demos/demos/galaxy_collision_3d.py`
 - Interactive renderer: `web/galaxy3d_view.js`
-- Parameters: impact, speed, disc tilt, softening
+- Scientific parameters: impact, speed, disc tilt, softening, Milky Way mass,
+  and Andromeda mass
+- Editable profile settings: massive super-particle count, solver substeps,
+  simulated Gyr span, force tile size, and maximum gravity step
 - Main frames: `frames/`
 - Rotatable state: one JSON file per frame under `interactive/`
 

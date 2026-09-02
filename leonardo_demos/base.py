@@ -224,7 +224,7 @@ class Demo:
         # solver's public scientific parameters while still recording it in the
         # run metadata for exact replay.
         if ctx is not None and ctx.params.get('_parallel_count') is not None:
-            count=max(4,int(ctx.params['_parallel_count']))
+            count=max(1,int(ctx.params['_parallel_count']))
             if 'ensemble' in self.settings:
                 self.settings['ensemble']=count
             if self.id == 'neural_wall':

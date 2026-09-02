@@ -17,8 +17,9 @@ state onto a torus, and advects passive tracers through its derived drift.
 ## Viewer behaviour
 
 The rotatable 3-D canvas is the default and consumes one state per playback
-frame. Plasma-flow and magnetic-geometry layers can be changed without stopping
-the timeline or resetting the visitor's camera.
+frame. Plasma flow and magnetic geometry are independent layers, so the field
+can overlay the passive flow trails. Visitors can also isolate one tracer colour
+family without changing the simulated state.
 
 ## Scientific boundary
 

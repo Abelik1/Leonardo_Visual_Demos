@@ -57,11 +57,11 @@ class PBHDemo(Demo):
         ens=int(self.settings.get('ensemble',64)); side=max(2,int(math.ceil(math.sqrt(ens)))); ims=[]
         ds=np.linspace(self.delta_c-.025,self.delta_c+.025,side)
         ws=np.linspace(.65,1.35,side)
-        for ww in ws:
-            for dd in ds:
-                rr=np.linspace(0,4,120); rho,_=self.profile(rr,float(dd),float(ww),1.0)
-                im=self.spherical(rr,rho,150); dr=ImageDraw.Draw(im,'RGBA');
-                col=(245,90,85,220) if dd>self.delta_c else (65,190,235,220); dr.rectangle((0,137,150,150),fill=col)
-                ims.append(im)
+        for j in range(ens):
+            ww=ws[j//side]; dd=ds[j%side]
+            rr=np.linspace(0,4,120); rho,_=self.profile(rr,float(dd),float(ww),1.0)
+            im=self.spherical(rr,rho,150); dr=ImageDraw.Draw(im,'RGBA');
+            col=(245,90,85,220) if dd>self.delta_c else (65,190,235,220); dr.rectangle((0,137,150,150),fill=col)
+            ims.append(im)
         rev=mosaic(ims,side,title="Scientists do not run one universe")
         rp=self.ctx.run_dir/'reveal.jpg'; self.ctx.save_frame(rev,rp); self.ctx.finish(rp)

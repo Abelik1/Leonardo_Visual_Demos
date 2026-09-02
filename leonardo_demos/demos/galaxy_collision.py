@@ -50,7 +50,8 @@ class GalaxyCollisionDemo(Demo):
     timing_methods={"setup":"initialization","step":"simulation","render":"render"}
     id="galaxy_collision"; title="Galaxy collision"
 
-    def setup(self,N,preset,impact,speed,tilt,transverse_velocity=None):
+    def setup(self,N,preset,impact,speed,tilt,transverse_velocity=None,
+              milky_way_mass=None,andromeda_mass=None):
         """Return positions, velocities and the two galaxy centres."""
         if preset>=0.5:
             p=MW_M31
@@ -64,6 +65,10 @@ class GalaxyCollisionDemo(Demo):
             vr=-60.0-160.0*speed; vt=10.0+120.0*impact
             r1,r2=20.0,26.0
             label="Custom encounter"; note=f"{sep:.0f} kpc apart, closing at {abs(vr):.0f} km/s"
+        if milky_way_mass is not None:
+            m1=float(milky_way_mass)*1e12
+        if andromeda_mass is not None:
+            m2=float(andromeda_mass)*1e12
         c1=np.array([-sep*.5,0.0]); c2=np.array([sep*.5,0.0])
         # Split the relative velocity between the two centres about the
         # centre of mass so the pair does not drift out of frame.
@@ -300,7 +305,11 @@ class GalaxyCollisionDemo(Demo):
         impact=float(self.ctx.params.get('impact',.55))
         speed=float(self.ctx.params.get('speed',.75))
         tilt=float(self.ctx.params.get('tilt',18))
-        p,v,c1,c2,vc1,vc2,m1,m2,label,note,sep=self.setup(N,preset,impact,speed,tilt)
+        mw_mass=float(self.ctx.params.get('milky_way_mass',1.5))
+        m31_mass=float(self.ctx.params.get('andromeda_mass',1.5))
+        p,v,c1,c2,vc1,vc2,m1,m2,label,note,sep=self.setup(
+            N,preset,impact,speed,tilt,milky_way_mass=mw_mass,
+            andromeda_mass=m31_mass)
         # Integrate far enough to pass through the merger (~6 Gyr for MW/M31).
         span_gyr=float(self.settings.get('span_gyr',7.5))
         total=span_gyr/TIME_UNIT_GYR
@@ -335,7 +344,7 @@ class GalaxyCollisionDemo(Demo):
                 "compute":f"{self.ctx.backend_name}{cpu_note}"})
         # Reveal: the same encounter under the observational uncertainty on the
         # transverse velocity, which is what actually decides the outcome.
-        ens=int(self.ctx.params.get('_parallel_count',16))
+        ens=int(self.ctx.params.get('_parallel_count',self.settings.get('ensemble',16)))
         side=max(2,int(math.ceil(math.sqrt(ens)))); ims=[]; labels=[]
         reveal_frames=max(10,self.ctx.frames//2)
         reveal_dt=total/(reveal_frames*substeps)
@@ -345,7 +354,8 @@ class GalaxyCollisionDemo(Demo):
             # Updating only the galaxy-centre velocities would leave the disc
             # tracers moving with the old centres and invert the encounter.
             st=self.setup(max(2500,N//8),1,impact,speed,tilt,
-                          transverse_velocity=vt)
+                          transverse_velocity=vt,milky_way_mass=mw_mass,
+                          andromeda_mass=m31_mass)
             pp,vv,cc1,cc2,vv1,vv2=st[0],st[1],st[2],st[3],st[4],st[5]
             for _ in range(reveal_frames):
                 pp,vv,cc1,cc2,vv1,vv2=self.step(

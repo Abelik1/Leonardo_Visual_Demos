@@ -5,6 +5,7 @@ runs/*
 !runs/.gitkeep
 .DS_Store
 config/leonardo.env
+# smallstep CA config and SSH certificates/keys for CINECA access - never commit
+.step/
 benchmarks/artifacts/
-tmp/*.jpg
-tmp/*.png
+tmp/

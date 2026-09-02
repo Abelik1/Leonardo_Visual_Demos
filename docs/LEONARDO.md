@@ -17,26 +17,109 @@ have 112 CPU cores and no GPUs. This demo asks only for the slice it can use;
 it does not reserve a whole DCGP node or four A100s merely to make the resource
 request look larger.
 
-## 1. Configure the account and paths
+## 1. Get access
 
-On Leonardo, copy the example and edit the real project-account value:
+Two separate identities are involved, and confusing them costs a day. The
+**UserDB account** (<https://userdb.hpc.cineca.it/>) is the portal where you
+register and where a PI adds you to a project. The **HPC username** is what you
+log in with: eight characters, the first letter of your given name plus the
+first seven of your surname, so Alexander Belik becomes `abelik00`.
+
+Each step unlocks the next, so the order is not negotiable:
+
+1. Register on UserDB, upload an identity document, sign the access policies.
+2. Ask the project PI to add you as a collaborator.
+3. Press **Submit** on the UserDB "HPC Access" page. Credentials arrive by email
+   within about a day, with a 2FA activation link that expires after 12 hours.
+4. Activate two-factor authentication at <https://sso.hpc.cineca.it> and scan the
+   QR code into an authenticator app. Keep the recovery codes.
+
+Leonardo does not use `authorized_keys`. An ordinary keypair is refused however
+it is configured, because the cluster trusts one CINECA certificate authority
+and accepts only certificates that authority signed. There is nowhere to upload
+a public key. Install the smallstep client and pin the CA once per machine:
+
+```bash
+winget install Smallstep.step        # or the platform equivalent
+step ca bootstrap --ca-url=https://sshproxy.hpc.cineca.it \
+  --fingerprint 2ae1543202304d3f434bdc1a2c92eff2cd2b02110206ef06317e70c1c1735ecd
+```
+
+Then, **once every twelve hours**, request a certificate and connect:
+
+```bash
+step ssh login 'you@example.org' --provisioner cineca-hpc
+ssh abelik00@login.leonardo.cineca.it
+```
+
+The identity passed to `step ssh login` is the email registered on UserDB, not
+the HPC username. `step ssh login` loads the certificate into `ssh-agent`, which
+must be running; on Windows that service ships disabled. Enabling it needs one
+elevated command, and `scripts/leonardo_login.ps1` wraps the whole flow —
+including a `-CertOnly` mode that writes the certificate to a file for `rsync`
+and `scp`, and for machines where the agent is unavailable.
+
+`login.leonardo.cineca.it` is round-robin DNS over four login nodes
+(`login01/02/05/07-ext`), each with its own host key. Reaching a node you have
+not used before therefore prints a host-key warning that is not an attack.
+Verify rather than wave it through: see `docs/TROUBLESHOOTING.md`.
+
+## 2. Configure the account and paths
+
+A project account is not a directory you enter. It is two things: a **storage
+area** (`$WORK` and `$FAST`, one pair per project) and a **billing identifier**
+passed to SLURM as `-A`. Logging in leaves you in `$HOME`, which is correct;
+there is no further step.
+
+Booster and DCGP budgets are **separate accounts** and each may only be spent on
+its own partition, so check both:
+
+```bash
+saldo -b            # Leonardo Booster
+saldo -b --dcgp     # Leonardo DCGP
+chprj -l            # projects you belong to, and which is default
+cindata             # occupancy of every area you can write to
+```
+
+`chprj -d <account>` repoints `$WORK` and `$FAST` when you belong to more than
+one project. Until a PI associates you with a project, `$WORK` reads
+`/no/project/defined`, `$FAST` is empty, and `saldo` reports "username not
+existing" — you can log in and compile, but not submit. Only the PI can fix it.
+
+| Area | Quota | Scope | Lifetime |
+|---|---|---|---|
+| `$HOME` | 50 GB | user | permanent (backup currently suspended) |
+| `$PUBLIC` | 50 GB | user, world-readable | permanent, no backup |
+| `$SCRATCH` | none | user | files deleted after 40 days |
+| `$WORK` | 1 TB default | project | permanent, no backup |
+| `$FAST` | 1 TB default | project, fast I/O, Leonardo only | permanent, no backup |
+| `$TMPDIR` | see below | job | removed at job end |
+
+Then copy the example and set the real project-account value:
 
 ```bash
 cp config/leonardo.env.example config/leonardo.env
-saldo -b
 ```
 
 `config/leonardo.env` is ignored by Git. The submission wrapper requires an
 explicit `LEONARDO_ACCOUNT`; it will not silently charge a training account
-copied from a slide deck. Confirm that the account is entitled to the selected
-partition and QoS.
+copied from a slide deck. The SLURM account name may differ from the UserDB
+AccountID — EuroHPC projects carry an `EUHPC_` prefix that the portal omits.
+`sacctmgr show associations user=$USER format=account,partition,qos` prints the
+exact string to use, and returns nothing at all if you have no association yet.
 
-Output defaults to `$FAST/leonardo_visual_demos`. `$FAST` is shared and suited
-to the frame stream. Booster nodes are diskless and expose only a fixed 10 GiB
-RAM-backed temporary area, so the job does not stage a complete run in
-`$TMPDIR`.
+Output defaults to `$FAST/leonardo_visual_demos`, which is shared and suited to
+the frame stream. Booster nodes are diskless and expose only a fixed 10 GiB
+RAM-backed `$TMPDIR`, so the job does not stage a complete run there. DCGP nodes
+have local SSD and can request up to 3 TB with `--gres=tmpfs:<size>`, but that
+request is charged against the budget like any other resource.
 
-## 2. Prepare one tested Python environment
+## 3. Prepare one tested Python environment
+
+Build and install on a login node — CINECA permits compilation there, and it is
+the only place with outbound network access. Login nodes have **no GPUs** and a
+**10-minute CPU-time limit** per process, so keep parallel builds modest and run
+nothing large.
 
 CPU-only setup:
 
@@ -66,7 +149,7 @@ the sole PyTorch demo. If it must train on a Leonardo GPU, prefer a CINECA
 An alternative is a pre-built Singularity image. See `container/README.md` and
 set `LEONARDO_CONTAINER` instead of `LEONARDO_VENV`.
 
-## 3. Submit and validate
+## 4. Submit and validate
 
 The fourth wrapper argument chooses the allocation and backend:
 
@@ -93,14 +176,29 @@ The example config uses the 30-minute debug QoS values. The job templates also
 request 30 minutes. For production runs, select a QoS allowed for the project
 and change the time limit in the job file if necessary.
 
+| Partition | Debug QoS | Walltime | Ceiling |
+|---|---|---|---|
+| `boost_usr_prod` | `boost_qos_dbg` | 00:30:00 | 2 nodes / 64 cores / 8 GPUs |
+| `dcgp_usr_prod` | `dcgp_qos_dbg` | 00:30:00 | 2 nodes / 224 cores |
+
+Budget is charged as *equivalent reserved cores × elapsed time*, and the
+equivalent-core count is the **maximum** of the cores requested, the GPUs
+requested × 8, and the memory requested divided by memory-per-core. On Booster
+that means one A100 costs at least eight cores whatever else you ask for, so the
+GPU template's `--cpus-per-task=8` is free rather than wasteful; requesting more
+memory than roughly 62 GB per GPU, however, silently raises the bill. Each
+account also carries a monthly quota, and exceeding it does not block jobs — it
+drops their queue priority until the month turns over.
+
 Monitor with:
 
 ```bash
 squeue --me
 scontrol show job JOBID
+sacct -Bj JOBID          # what the job was actually charged
 ```
 
-## 4. CPU and GPU scope
+## 5. CPU and GPU scope
 
 The collision is a restricted N-body model: each tracer feels the two moving
 galaxy potentials, so its cost is O(N), not the O(N²) all-pairs benchmark in
@@ -114,7 +212,7 @@ three of them. Multi-GPU scaling should be added only for independent
 encounters/parameter sweeps or a real distributed solver, with one rank per
 GPU and explicit result collation.
 
-## 5. Transfer and playback fallback
+## 6. Transfer and playback fallback
 
 Synchronise completed frames from the presentation computer with the transfer
 host specified by the event organisers:
@@ -132,5 +230,9 @@ earlier on Leonardo.
 
 - [CINECA Leonardo hardware, filesystems, partitions, and current known issues](https://docs.hpc.cineca.it/hpc/leonardo.html)
 - [CINECA scheduler and job-submission guide](https://docs.hpc.cineca.it/hpc/hpc_scheduler.html)
+- [CINECA account registration and HPC access request](https://docs.hpc.cineca.it/general/users_account.html)
+- [CINECA two-factor authentication and SSH certificate login](https://docs.hpc.cineca.it/general/access.html)
+- [CINECA file systems, quotas, `chprj` and `cindata`](https://docs.hpc.cineca.it/hpc/hpc_data_storage.html)
+- [CINECA FAQ, including the login-node host-key procedure](https://docs.hpc.cineca.it/faq.html)
 - [CINECA Singularity and Leonardo CUDA/container guidance](https://docs.hpc.cineca.it/services/singularity.html)
 - [CINECA Python `cineca-ai` environment guidance](https://docs.hpc.cineca.it/hpc/hpc_cineca-ai-hpyc.html)

@@ -6,91 +6,85 @@ The previews below were generated with the `desktop` profile using **150 simulat
 
 ## Demo gallery
 
-<table>
-  <tr>
-    <td width="50%">
-      <strong>Black-hole lensing</strong><br>
-      Image-space gravitational lensing with a numerical 3D photon-path view.<br><br>
-      <img src="docs/assets/demos/black_hole.gif" alt="Black-hole lensing demo" width="480">
-    </td>
-    <td width="50%">
-      <strong>Primordial black-hole threshold</strong><br>
-      A reduced radial model exploring the boundary between collapse and dispersion.<br><br>
-      <img src="docs/assets/demos/pbh.gif" alt="Primordial black-hole threshold demo" width="480">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <strong>Virtual wind tunnel</strong><br>
-      D2Q9 lattice-Boltzmann flow with advected streaklines and configurable obstacles.<br><br>
-      <img src="docs/assets/demos/fluid.gif" alt="Virtual wind tunnel demo" width="480">
-    </td>
-    <td>
-      <strong>Cosmic-web formation</strong><br>
-      Particle-mesh gravity with expanding-space and gas-composition comparisons.<br><br>
-      <img src="docs/assets/demos/cosmic_web.gif" alt="Cosmic-web formation demo" width="480">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <strong>Milky Way–Andromeda collision</strong><br>
-      Restricted N-body evolution using physical mass and encounter parameters.<br><br>
-      <img src="docs/assets/demos/galaxy_collision.gif" alt="Galaxy collision demo" width="480">
-    </td>
-    <td>
-      <strong>Galaxy collision: full 3D gravity</strong><br>
-      Direct softened all-pairs gravity over massive disc, bulge, and halo particles.<br><br>
-      <img src="docs/assets/demos/galaxy_collision_3d.gif" alt="Full 3D galaxy collision demo" width="480">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <strong>Living mathematics</strong><br>
-      Gray–Scott reaction-diffusion evolving from a seed into an emergent pattern.<br><br>
-      <img src="docs/assets/demos/reaction_diffusion.gif" alt="Reaction-diffusion demo" width="480">
-    </td>
-    <td>
-      <strong>Crystal growth</strong><br>
-      Recursive anisotropic growth with multiple habits and effectively unbounded deep zoom.<br><br>
-      <img src="docs/assets/demos/crystal.gif" alt="Crystal growth demo" width="480">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <strong>Neural-network wall</strong><br>
-      A real batched coordinate-network training workload that reveals many networks at once.<br><br>
-      <img src="docs/assets/demos/neural_wall.gif" alt="Neural-network wall demo" width="480">
-    </td>
-    <td>
-      <strong>Star in a Bottle</strong><br>
-      A reduced nonlinear plasma-wave lattice projected onto a rotatable tokamak torus.<br><br>
-      <img src="docs/assets/demos/fusion_plasma.gif" alt="Fusion plasma demo" width="480">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <strong>AI Plasma Guardian</strong><br>
-      A trainable neural controller learns to suppress a reduced plasma instability.<br><br>
-      <img src="docs/assets/demos/plasma_guardian.gif" alt="AI Plasma Guardian demo" width="480">
-    </td>
-    <td>
-      <strong>Storm Factory</strong><br>
-      A barotropic-vorticity atmosphere turns small initial uncertainty into diverging forecasts.<br><br>
-      <img src="docs/assets/demos/weather_ensemble.gif" alt="Weather ensemble demo" width="480">
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <strong>Molecular Machine</strong><br>
-      Coarse-grained 3D molecular dynamics with all-pairs interactions and ensemble comparisons.<br><br>
-      <img src="docs/assets/demos/molecular_dynamics.gif" alt="Molecular dynamics demo" width="480">
-    </td>
-    <td>
-      <strong>One viewer, three compute settings</strong><br>
-      The same demo contract runs locally, on a CUDA desktop, or headlessly under SLURM on Leonardo. Completed runs can be replayed without recomputation.
-    </td>
-  </tr>
-</table>
+### Black-hole lensing
+
+Image-space gravitational lensing with a numerical 3D photon-path view.
+
+<img src="docs/assets/demos/black_hole.gif" alt="Black-hole lensing demo" width="480">
+
+### Primordial black-hole threshold
+
+A reduced radial model exploring the boundary between collapse and dispersion.
+
+<img src="docs/assets/demos/pbh.gif" alt="Primordial black-hole threshold demo" width="480">
+
+### Virtual wind tunnel
+
+D2Q9 lattice-Boltzmann flow with advected streaklines and configurable obstacles.
+
+<img src="docs/assets/demos/fluid.gif" alt="Virtual wind tunnel demo" width="480">
+
+### Cosmic-web formation
+
+Particle-mesh gravity with expanding-space and gas-composition comparisons.
+
+<img src="docs/assets/demos/cosmic_web.gif" alt="Cosmic-web formation demo" width="480">
+
+### Milky Way–Andromeda collision
+
+Restricted N-body evolution using physical mass and encounter parameters.
+
+<img src="docs/assets/demos/galaxy_collision.gif" alt="Galaxy collision demo" width="480">
+
+### Galaxy collision: full 3D gravity
+
+Direct softened all-pairs gravity over massive disc, bulge, and halo particles.
+
+<img src="docs/assets/demos/galaxy_collision_3d.gif" alt="Full 3D galaxy collision demo" width="480">
+
+### Living mathematics
+
+Gray–Scott reaction-diffusion evolving from a seed into an emergent pattern.
+
+<img src="docs/assets/demos/reaction_diffusion.gif" alt="Reaction-diffusion demo" width="480">
+
+### Crystal growth
+
+Recursive anisotropic growth with multiple habits and effectively unbounded deep zoom.
+
+<img src="docs/assets/demos/crystal.gif" alt="Crystal growth demo" width="480">
+
+### Neural-network wall
+
+A real batched coordinate-network training workload that reveals many networks at once.
+
+<img src="docs/assets/demos/neural_wall.gif" alt="Neural-network wall demo" width="480">
+
+### Star in a Bottle
+
+A reduced nonlinear plasma-wave lattice projected onto a rotatable tokamak torus.
+
+<img src="docs/assets/demos/fusion_plasma.gif" alt="Fusion plasma demo" width="480">
+
+### AI Plasma Guardian
+
+A trainable neural controller learns to suppress a reduced plasma instability.
+
+<img src="docs/assets/demos/plasma_guardian.gif" alt="AI Plasma Guardian demo" width="480">
+
+### Storm Factory
+
+A barotropic-vorticity atmosphere turns small initial uncertainty into diverging forecasts.
+
+<img src="docs/assets/demos/weather_ensemble.gif" alt="Weather ensemble demo" width="480">
+
+### Molecular Machine
+
+Coarse-grained 3D molecular dynamics with all-pairs interactions and ensemble comparisons.
+
+<img src="docs/assets/demos/molecular_dynamics.gif" alt="Molecular dynamics demo" width="480">
+
+The same demo contract runs locally, on a CUDA desktop, or headlessly under SLURM on Leonardo. Completed runs can be replayed without recomputation.
 
 ## Run locally
 

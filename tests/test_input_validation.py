@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 from PIL import Image
@@ -33,6 +34,34 @@ class InputValidationTests(unittest.TestCase):
             start('reaction_diffusion', RunReq(params={'unexpected': 1}))
         with self.assertRaises(HTTPException):
             start('reaction_diffusion', RunReq(params={'feed': 1.0}))
+
+    def test_every_profile_setting_is_published_as_editable(self):
+        payload=specs()
+        schema=payload['profile_setting_schema']
+        for profile,demos in payload['profiles'].items():
+            for demo,settings in demos.items():
+                self.assertEqual(set(settings),set(schema[demo]),f'{profile}/{demo}')
+                for name,value in settings.items():
+                    self.assertLessEqual(schema[demo][name]['min'],value)
+                    self.assertGreaterEqual(schema[demo][name]['max'],value)
+
+    def test_api_validates_and_accepts_profile_setting_overrides(self):
+        with self.assertRaises(HTTPException):
+            start('reaction_diffusion',RunReq(settings={'not_a_setting':12}))
+        with self.assertRaises(HTTPException):
+            start('reaction_diffusion',RunReq(settings={'n':999999}))
+        with self.assertRaises(HTTPException):
+            start('reaction_diffusion',RunReq(settings={'n':128.5}))
+        with patch('app.threading.Thread') as thread:
+            result=start('reaction_diffusion',RunReq(settings={'n':144,'ensemble':10}))
+        self.assertTrue(result['id'].startswith('reaction_diffusion_'))
+        thread.return_value.start.assert_called_once()
+
+    def test_galaxy_mass_controls_are_real_scientific_parameters(self):
+        for demo in ('galaxy_collision','galaxy_collision_3d'):
+            params=specs()['demos'][demo]['params']
+            self.assertIn('milky_way_mass',params)
+            self.assertIn('andromeda_mass',params)
 
     def test_api_rejects_invalid_parallel_and_obstacle_grids(self):
         with self.assertRaises(HTTPException):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse, json, time, webbrowser
+from numbers import Integral, Real
 from pathlib import Path
 from leonardo_demos.base import RunContext
 from leonardo_demos.registry import DEMOS
@@ -9,6 +10,53 @@ ROOT=Path(__file__).resolve().parent
 def load_profiles(): return json.loads((ROOT/'config/profiles.json').read_text())
 def load_specs(): return json.loads((ROOT/'config/demo_specs.json').read_text())
 
+def profile_setting_schema(profiles=None):
+    """Describe every numeric value carried by a compute profile.
+
+    Profiles are safe starting presets, not sealed configurations. The
+    editable range spans all shipped/tested presets. A setting whose value is
+    identical in every preset receives a conservative range around that value
+    so it is still genuinely editable.
+    """
+    profiles=profiles or load_profiles()
+    demos={demo for profile in profiles.values() for demo in profile}
+    result={}
+    for demo in sorted(demos):
+        keys={key for profile in profiles.values() for key in profile.get(demo,{})}
+        fields={}
+        for key in sorted(keys):
+            values=[profile[demo][key] for profile in profiles.values()
+                    if demo in profile and key in profile[demo]]
+            if not values or not all(isinstance(value,Real) and not isinstance(value,bool)
+                                     for value in values):
+                continue
+            integer=all(isinstance(value,Integral) for value in values)
+            low=min(values); high=max(values)
+            # Do not make the named presets the bounds. They are starting
+            # points: visitors can deliberately run below benchmark or above
+            # Leonardo. The finite profile-derived envelope still catches an
+            # accidental extra zero before an O(N²) or high-resolution job is
+            # launched.
+            if integer:
+                low=max(1,int(low)//4)
+                high=max(int(high)+1,int(high)*2)
+            else:
+                low=max(.0001,float(low)/4)
+                high=max(float(high)+.0001,float(high)*4)
+            fields[key]={
+                'type':'integer' if integer else 'number',
+                'min':int(low) if integer else float(low),
+                'max':int(high) if integer else float(high),
+                # Decimal controls may have profile-derived minima that are
+                # not an integer multiple of a display step (7.5 Gyr with a
+                # derived 1.875 minimum, for example). ``any`` keeps exact
+                # numeric editing valid; the API still enforces finite values
+                # and the published min/max bounds.
+                'step':1 if integer else 'any',
+            }
+        result[demo]=fields
+    return result
+
 def _normalise_backend(value):
     value=value.lower()
     if value in {'numpy','cpu'}: return 'cpu'
@@ -17,7 +65,7 @@ def _normalise_backend(value):
     return value
 
 def run(demo,profile='local',frames=80,params=None,backend='auto',run_dir=None,
-        method='default',timings=False,numerical_substeps=None):
+        method='default',timings=False,numerical_substeps=None,settings_override=None):
     profiles=load_profiles(); specs=load_specs()
     if demo not in DEMOS: raise SystemExit(f"Unknown demo {demo}. Choices: {', '.join(DEMOS)}")
     if profile not in profiles: raise SystemExit(f"Unknown profile {profile}")
@@ -37,12 +85,15 @@ def run(demo,profile='local',frames=80,params=None,backend='auto',run_dir=None,
     if method not in demo_class.methods:
         raise ValueError(f"{demo} does not support method {method!r}; choices: {', '.join(demo_class.methods)}")
     settings=dict(profiles[profile][demo])
+    settings.update(settings_override or {})
     if numerical_substeps is not None:
         if demo not in {'galaxy_collision','galaxy_collision_3d'}:
             raise ValueError('numerical substeps are only defined for the collision solvers')
         settings['substeps']=int(numerical_substeps)
     ctx=RunContext(run_dir,demo,profile,frames,defaults,backend,
                    demo_class.backend_kind,method,timings)
+    ctx.write_meta({'settings':settings,
+                    'settings_override':dict(settings_override or {})})
     if numerical_substeps is not None:
         ctx.write_meta({'numerical_substeps':int(numerical_substeps)})
     try:
@@ -54,13 +105,19 @@ def run(demo,profile='local',frames=80,params=None,backend='auto',run_dir=None,
 
 if __name__=='__main__':
     ap=argparse.ArgumentParser(description='Generate a visual HPC demo run')
-    ap.add_argument('demo',choices=sorted(DEMOS)); ap.add_argument('--profile',choices=sorted(load_profiles()),default='local'); ap.add_argument('--frames',type=int,default=80); ap.add_argument('--backend',default='auto'); ap.add_argument('--method',default='default'); ap.add_argument('--numerical-substeps',type=int); ap.add_argument('--timings',action='store_true'); ap.add_argument('--param',action='append',default=[],help='key=value, repeatable'); ap.add_argument('--run-dir'); ap.add_argument('--open',action='store_true')
-    a=ap.parse_args(); params={}
+    ap.add_argument('demo',choices=sorted(DEMOS)); ap.add_argument('--profile',choices=sorted(load_profiles()),default='local'); ap.add_argument('--frames',type=int,default=80); ap.add_argument('--backend',default='auto'); ap.add_argument('--method',default='default'); ap.add_argument('--numerical-substeps',type=int); ap.add_argument('--timings',action='store_true'); ap.add_argument('--param',action='append',default=[],help='scientific key=value, repeatable'); ap.add_argument('--setting',action='append',default=[],help='profile/scale key=value, repeatable'); ap.add_argument('--run-dir'); ap.add_argument('--open',action='store_true')
+    a=ap.parse_args(); params={}; settings_override={}
     for kv in a.param:
         k,v=kv.split('=',1)
         try: v=float(v)
         except ValueError: pass
         params[k]=v
-    rd=run(a.demo,a.profile,a.frames,params,a.backend,a.run_dir,a.method,a.timings,a.numerical_substeps)
+    for kv in a.setting:
+        k,v=kv.split('=',1)
+        try: v=float(v)
+        except ValueError: pass
+        settings_override[k]=v
+    rd=run(a.demo,a.profile,a.frames,params,a.backend,a.run_dir,a.method,a.timings,
+           a.numerical_substeps,settings_override)
     if a.open:
         webbrowser.open(f'file://{(rd/"frames"/"frame_0000.jpg").resolve()}')

@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from PIL import Image, UnidentifiedImageError
-from run_demo import run, load_profiles, load_specs
+from run_demo import run, load_profiles, load_specs, profile_setting_schema
 from leonardo_demos.registry import DEMOS
 from leonardo_demos.backend import probe as probe_backends
 
@@ -26,11 +26,12 @@ class RunReq(BaseModel):
     # living-mathematics runs are valid rather than a request-validation error.
     frames: int = Field(default=70, ge=1, le=600)
     params: dict[str, float] = Field(default_factory=dict)
+    settings: dict[str, float] = Field(default_factory=dict)
     backend: Literal['auto', 'numpy', 'cpu', 'cupy', 'cuda', 'gpu', 'hybrid'] = 'auto'
     method: str = Field(default='default', min_length=1, max_length=64)
     numerical_substeps: int | None = Field(default=None, ge=1, le=32)
     target_image: str | None = Field(default=None, max_length=400_000)
-    parallel_count: int | None = Field(default=None, ge=4, le=64)
+    parallel_count: int | None = Field(default=None, ge=1, le=64)
     obstacle_grid: list[list[int]] | None = None
 
 def save_target_image(data_url: str, destination: Path) -> None:
@@ -55,6 +56,7 @@ def index(): return (ROOT/'web/index.html').read_text(encoding='utf-8')
 @app.get('/api/specs')
 def specs():
     return {'demos':load_specs(),'profiles':load_profiles(),'available':list(DEMOS),
+            'profile_setting_schema':profile_setting_schema(),
             'backends':probe_backends(),
             'capabilities':{name:{'backends':list(cls.supported_backends),
                                   'backend_kind':cls.backend_kind,
@@ -97,6 +99,8 @@ def list_runs(demo:str|None=None,limit:int=120):
             'method':meta.get('method'),
             'status':meta.get('status'),
             'params':meta.get('params',{}),
+            'settings':meta.get('settings',{}),
+            'settings_override':meta.get('settings_override',{}),
             'frames':len(frames),
             'elapsed':meta.get('elapsed'),
             'created':meta.get('created') or d.stat().st_mtime,
@@ -133,11 +137,23 @@ def start(demo:str,req:RunReq):
         limits=spec_params[name]
         if not math.isfinite(value) or not limits['min'] <= value <= limits['max']:
             raise HTTPException(422, f"{name} must be between {limits['min']} and {limits['max']}")
+    setting_limits=profile_setting_schema().get(demo,{})
+    unknown_settings=set(req.settings)-set(setting_limits)
+    if unknown_settings:
+        raise HTTPException(422, f"unknown profile setting(s): {', '.join(sorted(unknown_settings))}")
+    clean_settings={}
+    for name,value in req.settings.items():
+        limits=setting_limits[name]
+        if not math.isfinite(value) or not limits['min'] <= value <= limits['max']:
+            raise HTTPException(422, f"{name} must be between {limits['min']} and {limits['max']}")
+        if limits['type']=='integer' and not float(value).is_integer():
+            raise HTTPException(422, f'{name} must be a whole number')
+        clean_settings[name]=int(value) if limits['type']=='integer' else float(value)
     rid=f'{demo}_{time.strftime("%Y%m%d_%H%M%S")}_{uuid.uuid4().hex[:5]}'; rd=RUNS/rid
     params=dict(req.params)
     if req.parallel_count is not None:
-        if req.parallel_count not in {4,9,16,25,36,49,64}:
-            raise HTTPException(422, 'parallel count must form a square reveal grid: 4, 9, 16, 25, 36, 49 or 64')
+        if req.parallel_count not in {1,4,9,16,25,36,49,64}:
+            raise HTTPException(422, 'parallel count must be 1 or form a square reveal grid: 4, 9, 16, 25, 36, 49 or 64')
         params['_parallel_count']=int(req.parallel_count)
     if req.obstacle_grid is not None:
         if demo != 'fluid':
@@ -158,7 +174,8 @@ def start(demo:str,req:RunReq):
         params['_target_path']=str(target_path)
     def worker():
         try: run(demo,req.profile,req.frames,params,req.backend,rd,method=method,
-                 numerical_substeps=req.numerical_substeps)
+                 numerical_substeps=req.numerical_substeps,
+                 settings_override=clean_settings)
         except Exception as e: print('run failed',e)
     threading.Thread(target=worker,daemon=True).start(); return {'id':rid}
 

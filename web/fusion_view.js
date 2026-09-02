@@ -3,7 +3,9 @@ class FusionView {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.data = null;
-    this.mode = 'plasma';
+    this.showPlasma = true;
+    this.showMagnetic = false;
+    this.particleFilter = 'all';
     this.yaw = -0.18;
     this.pitch = 0.92;
     this.zoom = 1;
@@ -55,8 +57,14 @@ class FusionView {
     this.draw();
   }
 
-  setMode(mode) {
-    this.mode = mode === 'magnetic' ? 'magnetic' : 'plasma';
+  setLayer(layer, enabled) {
+    if (layer === 'magnetic') this.showMagnetic = Boolean(enabled);
+    if (layer === 'plasma') this.showPlasma = Boolean(enabled);
+    this.draw();
+  }
+
+  setParticleFilter(filter) {
+    this.particleFilter = filter === 'all' ? 'all' : String(Math.max(0, Math.min(3, Number(filter) || 0)));
     this.draw();
   }
 
@@ -129,6 +137,7 @@ class FusionView {
   drawTrails() {
     const trails=this.data.trails||[], segments=[];
     for (let particle=0; particle<trails.length; particle++) {
+      if (this.particleFilter !== 'all' && particle % 4 !== Number(this.particleFilter)) continue;
       const points=trails[particle].map(uv=>this.project(uv[0],uv[1]));
       for (let k=1;k<points.length;k++) {
         const a=points[k-1],b=points[k];
@@ -147,6 +156,7 @@ class FusionView {
     }
     ctx.globalCompositeOperation='source-over';
     for(let particle=0;particle<trails.length;particle++){
+      if (this.particleFilter !== 'all' && particle % 4 !== Number(this.particleFilter)) continue;
       const uv=trails[particle][trails[particle].length-1],p=this.project(uv[0],uv[1]);
       const c=colours[particle%colours.length],front=Math.max(.35,Math.min(1,.48+.52*(p.z+.65)/1.3));
       ctx.fillStyle=`rgba(248,255,255,${front})`;ctx.strokeStyle=`rgb(${c[0]},${c[1]},${c[2]})`;ctx.lineWidth=1.2*this.dpr;
@@ -182,25 +192,15 @@ class FusionView {
     ctx.globalCompositeOperation='source-over';
   }
 
-  drawLabels() {
-    const ctx=this.ctx,d=this.dpr,w=this.canvas.width,h=this.canvas.height;
-    const magnetic=this.mode==='magnetic';
-    ctx.fillStyle='rgba(3,7,18,.78)';ctx.strokeStyle='rgba(108,219,255,.35)';ctx.lineWidth=d;
-    ctx.beginPath();ctx.roundRect(22*d,20*d,magnetic?520*d:410*d,72*d,14*d);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#f3f8ff';ctx.font=`700 ${20*d}px Arial`;ctx.fillText(magnetic?'MAGNETIC CONFINEMENT GEOMETRY':'PLASMA FLOW + PASSIVE TRACERS',40*d,49*d);
-    ctx.fillStyle=magnetic?'#8feaff':'#9eb8d7';ctx.font=`${12*d}px Arial`;
-    ctx.fillText(magnetic?`illustrative helical field · B ${Number(this.data.magnetic_field).toFixed(1)} T`:'drag to rotate · wheel to zoom · double-click to reset',40*d,73*d);
-    if(magnetic){ctx.fillStyle='rgba(185,207,235,.9)';ctx.font=`${11*d}px Arial`;ctx.fillText('geometry view — not a solved tokamak equilibrium',26*d,h-24*d);}
-  }
-
   draw() {
     if(!this.data||!this.canvas.width||!this.canvas.height)return;
     const ctx=this.ctx,w=this.canvas.width,h=this.canvas.height;
     const gradient=ctx.createRadialGradient(w*.48,h*.40,0,w*.5,h*.5,Math.max(w,h)*.65);
-    gradient.addColorStop(0,this.mode==='magnetic'?'#07152b':'#0a0b28');gradient.addColorStop(.55,'#030711');gradient.addColorStop(1,'#010309');
+    gradient.addColorStop(0,this.showMagnetic?'#07152b':'#0a0b28');gradient.addColorStop(.55,'#030711');gradient.addColorStop(1,'#010309');
     ctx.fillStyle=gradient;ctx.fillRect(0,0,w,h);
-    if(this.mode==='magnetic'){this.drawSurface(.10);this.drawMagneticField();}
-    else{this.drawSurface(.42);this.drawTrails();}
+    if(this.showPlasma){this.drawSurface(this.showMagnetic?.28:.42);this.drawTrails();}
+    else if(this.showMagnetic){this.drawSurface(.10);}
+    if(this.showMagnetic)this.drawMagneticField();
     // Titles, parameter readouts and method notes belong to the HTML view
     // layers. The canvas remains a clean, rotatable scientific viewport.
   }

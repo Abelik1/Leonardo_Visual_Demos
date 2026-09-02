@@ -31,6 +31,14 @@ python run_demo.py DEMO --profile desktop --frames 20
 
 Only then test `leonardo`.
 
+Profiles are presets, not hard-coded modes. Every numeric key present for a
+demo in `config/profiles.json` is published by `/api/specs`, rendered as an
+editable number field, validated by `/api/run/<demo>`, and persisted in the
+run's `meta.json`. Keep the same keys in all four profiles. Add explanatory
+labels in `web/app.js` when the raw key would be unclear. From the CLI, use
+`--setting key=value`; reserve `--param key=value` for visitor-facing
+scientific inputs from `config/demo_specs.json`.
+
 For array demos, forcing CPU/GPU is useful. The CLI flag, the environment
 variable and the viewer's Compute selector all feed the same request:
 
